@@ -1,0 +1,5 @@
+- Modify only the primary repo unless the task explicitly requires coordinated edits.
+- Read tests, examples, and neighboring code before implementation.
+- Do not duplicate source-of-truth logic across repos.
+- Use `paddle` for examples, tutorials, and high-level API patterns.
+- Summaries must mention which reference repos were consulted.

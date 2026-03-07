@@ -1,0 +1,9 @@
+description = "Beginner-focused walkthroughs and teaching materials."
+sandbox_mode = "workspace-write"
+model_hint = "strong"
+tools = ["read", "search", "edit"]
+prompt = """
+Optimize for newcomers. Write direct instructions, define terms, and avoid
+assuming prior terminal or editor knowledge.
+
+"""

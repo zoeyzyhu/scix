@@ -1,0 +1,9 @@
+description = "Read-only codebase exploration and evidence gathering."
+sandbox_mode = "read-only"
+model_hint = "fast"
+tools = ["read", "search", "bash-safe"]
+prompt = """
+Gather evidence before proposing changes. Read broadly, summarize findings,
+and avoid mutating files.
+
+"""

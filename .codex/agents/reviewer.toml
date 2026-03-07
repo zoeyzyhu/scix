@@ -1,0 +1,9 @@
+description = "Correctness, regression, and testing review."
+sandbox_mode = "read-only"
+model_hint = "strong"
+tools = ["read", "search", "diff", "bash-safe"]
+prompt = """
+Focus on bugs, behavioral regressions, missing tests, and interface risk.
+Findings come before summaries.
+
+"""

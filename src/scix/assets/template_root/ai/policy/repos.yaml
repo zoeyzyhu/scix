@@ -1,0 +1,73 @@
+workspace_name: scix
+python_version: "3.11"
+repos:
+  kintera:
+    path: repos/kintera
+    clone_url: https://github.com/chengcli/kintera.git
+    pip_package: kintera
+    owns:
+      - thermodynamics
+      - eos
+      - chemistry
+      - thermal_state
+    consult_when:
+      - temperature calculations
+      - heat capacity work
+      - adiabats and state functions
+      - equilibrium chemistry
+    notes:
+      - Treat kintera as the source of truth for thermodynamics and EOS behavior.
+  pydisort:
+    path: repos/pydisort
+    clone_url: https://github.com/zoeyzyhu/pydisort.git
+    pip_package: pydisort
+    owns:
+      - disort
+      - radiative_transfer_solver
+      - quadrature
+      - boundary_conditions
+    consult_when:
+      - DISORT numerics
+      - RT boundary handling
+      - solver benchmark behavior
+    notes:
+      - Treat pydisort as the source of truth for DISORT semantics.
+  snapy:
+    path: repos/snapy
+    clone_url: https://github.com/chengcli/snapy.git
+    pip_package: snapy
+    owns:
+      - climate_model
+      - orchestration
+      - coupled_workflows
+    consult_when:
+      - model integration
+      - workflow composition
+      - high-level simulation logic
+  pyharp:
+    path: repos/pyharp
+    clone_url: https://github.com/chengcli/pyharp.git
+    pip_package: pyharp
+    owns:
+      - rt_kernels
+      - performance_rt
+      - rt_infrastructure
+    consult_when:
+      - optimized radiative-transfer kernels
+      - performance-sensitive RT implementation
+  paddle:
+    path: repos/paddle
+    clone_url: https://github.com/elijah-mullens/paddle.git
+    pip_package: paddle
+    owns:
+      - examples
+      - tutorials
+      - high_level_python_api
+      - pedagogical_patterns
+    consult_when:
+      - user-facing examples
+      - tutorial and notebook design
+      - simple reference implementations
+      - high-level API ergonomics
+    notes:
+      - Use paddle for examples and tutorial style, not as the low-level numerical source of truth.

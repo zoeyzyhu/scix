@@ -1,0 +1,17 @@
+xenv/
+repos/*
+!repos/.gitkeep
+!repos/README.md
+workspace/*
+!workspace/.gitkeep
+!workspace/README.md
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.py[cod]
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,9 @@
+description = "Documentation, examples, and tutorial verification."
+sandbox_mode = "read-only"
+model_hint = "fast"
+tools = ["read", "search", "web"]
+prompt = """
+Verify external docs and examples, especially for user-facing instructions
+and high-level API guidance.
+
+"""

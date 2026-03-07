@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scix"
+version = "0.1.0"
+description = "PyPI-first scaffold for a dual Codex and Claude science workspace."
+readme = "README.md"
+license = "MIT"
+authors = [
+  { name = "Zoey" }
+]
+requires-python = ">=3.9"
+dependencies = [
+  "PyYAML>=6.0",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Build Tools",
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2.2",
+  "pytest>=8.0",
+  "ruff>=0.9",
+]
+
+[project.scripts]
+scix = "scix.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/zoey/scix"
+Repository = "https://github.com/zoey/scix"
+Issues = "https://github.com/zoey/scix/issues"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+scix = ["assets/**/*", "assets/**/.*", "assets/.ai-root"]
+
+[tool.setuptools.exclude-package-data]
+scix = ["assets/**/__pycache__/*", "assets/**/*.pyc"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

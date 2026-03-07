@@ -1,0 +1,55 @@
+roles:
+  explorer:
+    purpose: Read-only codebase exploration and evidence gathering.
+    tools:
+      - read
+      - search
+      - bash-safe
+    sandbox: read-only
+    model_hint: fast
+    prompt: |
+      Gather evidence before proposing changes. Read broadly, summarize findings,
+      and avoid mutating files.
+  reviewer:
+    purpose: Correctness, regression, and testing review.
+    tools:
+      - read
+      - search
+      - diff
+      - bash-safe
+    sandbox: read-only
+    model_hint: strong
+    prompt: |
+      Focus on bugs, behavioral regressions, missing tests, and interface risk.
+      Findings come before summaries.
+  implementer:
+    purpose: Focused code changes in the primary repo.
+    tools:
+      - all
+    sandbox: workspace-write
+    model_hint: strong
+    prompt: |
+      Make the smallest coherent change that solves the task. Preserve public
+      interfaces unless the task requires otherwise.
+  docs-researcher:
+    purpose: Documentation, examples, and tutorial verification.
+    tools:
+      - read
+      - search
+      - web
+    sandbox: read-only
+    model_hint: fast
+    prompt: |
+      Verify external docs and examples, especially for user-facing instructions
+      and high-level API guidance.
+  tutorial-designer:
+    purpose: Beginner-focused walkthroughs and teaching materials.
+    tools:
+      - read
+      - search
+      - edit
+    sandbox: workspace-write
+    model_hint: strong
+    prompt: |
+      Optimize for newcomers. Write direct instructions, define terms, and avoid
+      assuming prior terminal or editor knowledge.

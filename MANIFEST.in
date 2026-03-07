@@ -1,0 +1,3 @@
+recursive-include src/scix/assets *
+recursive-include src/scix/assets .*
+global-exclude __pycache__ *.py[cod]
