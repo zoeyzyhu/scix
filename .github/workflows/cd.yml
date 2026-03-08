@@ -5,6 +5,10 @@ on:
     types: [closed]
     branches: [main]
 
+concurrency:
+  group: auto-tag-main
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -14,28 +18,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate bump-bot token
+        id: app_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.BUMP_BOT_APP_ID }}
+          private-key: ${{ secrets.BUMP_BOT_PRIVATE_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+          token: ${{ steps.app_token.outputs.token }}
 
       - name: Determine next version
         id: next_version
         run: |
-          # Get latest tag
           LATEST=$(git describe --tags --abbrev=0 || echo "v0.0.0")
-          MAJOR=$(echo $LATEST | cut -d. -f1 | sed 's/v//')
-          MINOR=$(echo $LATEST | cut -d. -f2)
-          PATCH=$(echo $LATEST | cut -d. -f3)
+          MAJOR=$(echo "$LATEST" | cut -d. -f1 | sed 's/v//')
+          MINOR=$(echo "$LATEST" | cut -d. -f2)
+          PATCH=$(echo "$LATEST" | cut -d. -f3)
 
-          # Default: patch bump (could also use PR label for minor/major)
           NEXT="v${MAJOR}.${MINOR}.$((PATCH+1))"
-
           echo "next_version=$NEXT" >> "$GITHUB_OUTPUT"
 
-      - name: Push tag
+      - name: Create and push tag
+        env:
+          TAG: ${{ steps.next_version.outputs.next_version }}
         run: |
-          git config user.name "bump-bot"
-          git config user.email "bump-bot@users.noreply.github.com"
-          git tag ${{ steps.next_version.outputs.next_version }}
-          git push origin ${{ steps.next_version.outputs.next_version }}
+          git config user.name "bump-bot[app]"
+          git config user.email "bump-bot[app]@users.noreply.github.com"
+
+          if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists on origin; skipping push."
+            exit 0
+          fi
+
+          git tag "$TAG"
+          git push origin "$TAG"
