@@ -15,8 +15,17 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
         with:
+          app-id: ${{ vars.BUMP_BOT_APP_ID }}
+          private-key: ${{ secrets.BUMP_BOT_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # Use the generated app token
+          token: ${{ steps.app-token.outputs.token }}
           ref: ${{ github.event.pull_request.merge_commit_sha }}
           fetch-depth: 0
 
