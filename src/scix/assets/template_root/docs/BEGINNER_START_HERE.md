@@ -4,7 +4,7 @@ Start with the workspace [README.md](../README.md).
 
 It explains:
 
-- how to recover if `scix` says "command not found"
+- how to create or activate `xenv`
 - how to activate `xenv`
 - how to install Codex on Ubuntu or Debian
 - how to log into Codex and Claude

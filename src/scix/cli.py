@@ -21,11 +21,6 @@ def build_parser() -> argparse.ArgumentParser:
     up_parser.add_argument("--yes", action="store_true", help="Skip interactive confirmation")
     up_parser.add_argument("--force", action="store_true", help="Allow a non-empty directory")
     up_parser.add_argument(
-        "--skip-python",
-        action="store_true",
-        help="Skip pyenv, xenv, and pip setup",
-    )
-    up_parser.add_argument(
         "--skip-repos",
         action="store_true",
         help="Skip cloning reference repositories",
@@ -66,7 +61,6 @@ def cmd_up(args: argparse.Namespace) -> int:
         root,
         assume_yes=args.yes,
         force=args.force,
-        skip_python=args.skip_python,
         skip_repos=args.skip_repos,
         check=args.check,
     )

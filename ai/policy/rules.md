@@ -1,5 +1,11 @@
 - Modify only the primary repo unless the task explicitly requires coordinated edits.
 - Read tests, examples, and neighboring code before implementation.
+- Implementation work follows `implementer -> tester -> reviewer`.
+- Add or update tests when a change affects behavior and automated coverage is feasible.
+- Run the relevant test or validation command before finalizing.
+- If tests fail, fix the issue and rerun before finalizing.
+- If no automated test is feasible, say why and run the closest available validation step.
 - Do not duplicate source-of-truth logic across repos.
 - Use `paddle` for examples, tutorials, and high-level API patterns.
 - Summaries must mention which reference repos were consulted.
+- Summaries for implementation work must include the exact validation command and result.

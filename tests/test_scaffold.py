@@ -70,7 +70,12 @@ def test_sync_workspace_generates_expected_files(tmp_path: Path) -> None:
     )
     assert (tmp_path / ".claude/agents/explorer.md").exists()
     assert (tmp_path / ".codex/agents/explorer.toml").exists()
+    assert (tmp_path / ".claude/agents/tester.md").exists()
+    assert (tmp_path / ".codex/agents/tester.toml").exists()
     assert (tmp_path / "ai/generated/repos/kintera/AGENTS.md").exists()
+    assert "implementer -> tester -> reviewer" in (tmp_path / "AGENTS.md").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_sync_workspace_copies_repo_overlays_into_existing_clone(tmp_path: Path) -> None:
@@ -81,6 +86,8 @@ def test_sync_workspace_copies_repo_overlays_into_existing_clone(tmp_path: Path)
 
     assert (tmp_path / "repos/kintera/AGENTS.md").exists()
     assert (tmp_path / "repos/kintera/CLAUDE.md").exists()
+    overlay_text = (tmp_path / "repos/kintera/AGENTS.md").read_text(encoding="utf-8")
+    assert "exact validation command and result" in overlay_text
 
 
 def test_sync_workspace_check_detects_stale_file(tmp_path: Path) -> None:
@@ -96,7 +103,7 @@ def test_perform_up_rejects_non_empty_directory_without_force(tmp_path: Path) ->
     (tmp_path / "note.txt").write_text("hello\n", encoding="utf-8")
 
     with pytest.raises(ScixError):
-        perform_up(tmp_path, assume_yes=True, skip_python=True, skip_repos=True)
+        perform_up(tmp_path, assume_yes=True, skip_repos=True)
 
 
 def test_perform_up_rejects_repo_shaped_directory_without_force(tmp_path: Path) -> None:
@@ -104,13 +111,22 @@ def test_perform_up_rejects_repo_shaped_directory_without_force(tmp_path: Path) 
     (tmp_path / "src/scix").mkdir(parents=True)
 
     with pytest.raises(ScixError):
-        perform_up(tmp_path, assume_yes=True, skip_python=True, skip_repos=True)
+        perform_up(tmp_path, assume_yes=True, skip_repos=True)
+
+
+def test_perform_up_allows_directory_with_only_xenv(tmp_path: Path) -> None:
+    (tmp_path / "xenv").mkdir()
+
+    perform_up(tmp_path, assume_yes=True, skip_repos=True)
+
+    assert (tmp_path / ".ai-root").exists()
+    assert (tmp_path / "README.md").exists()
 
 
 def test_perform_up_force_allows_non_empty_directory(tmp_path: Path) -> None:
     (tmp_path / "note.txt").write_text("hello\n", encoding="utf-8")
 
-    perform_up(tmp_path, assume_yes=True, force=True, skip_python=True, skip_repos=True)
+    perform_up(tmp_path, assume_yes=True, force=True, skip_repos=True)
 
     assert (tmp_path / ".ai-root").exists()
     assert (tmp_path / "README.md").exists()
@@ -124,6 +140,9 @@ def test_doctor_reports_invalid_skill_frontmatter(tmp_path: Path) -> None:
     issues = doctor(tmp_path)
 
     assert any("Invalid skill file" in issue for issue in issues)
+    assert not any("xenv" in issue for issue in issues)
+    assert not any("pyenv" in issue for issue in issues)
+    assert not any("sudo" in issue for issue in issues)
 
 
 def test_perform_dev_up_backfills_workspace_without_overwriting_canonical_files(
@@ -138,7 +157,7 @@ def test_perform_dev_up_backfills_workspace_without_overwriting_canonical_files(
     (tmp_path / "README.md").write_text("custom contributor README\n", encoding="utf-8")
     (tmp_path / "ai/policy/workspace.md").write_text("custom workspace policy\n", encoding="utf-8")
 
-    perform_dev_up(tmp_path, skip_python=True, skip_repos=True)
+    perform_dev_up(tmp_path, skip_repos=True)
 
     assert (tmp_path / "README.md").read_text(encoding="utf-8") == "custom contributor README\n"
     assert (tmp_path / "ai/policy/workspace.md").read_text(
@@ -168,3 +187,16 @@ def test_dev_setup_and_bootstrap_import_without_yaml_on_sys_path() -> None:
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_runtime_bootstrap_sources_do_not_reference_pyenv_or_sudo() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    for relative_path in [
+        Path("src/scix/bootstrap.py"),
+        Path("src/scix/cli.py"),
+        Path("src/scix/dev_setup.py"),
+        Path("src/scix/constants.py"),
+    ]:
+        content = (repo_root / relative_path).read_text(encoding="utf-8").lower()
+        assert "pyenv" not in content
+        assert "sudo" not in content

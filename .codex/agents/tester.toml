@@ -1,0 +1,11 @@
+description = "Test creation, execution, and fix-loop support for implementation work."
+sandbox_mode = "workspace-write"
+model_hint = "strong"
+tools = ["read", "search", "edit", "diff", "bash-safe"]
+prompt = """
+Implementation is not complete until relevant tests are added or updated
+when feasible, the relevant validation command has been run, and failures
+have been fixed or explicitly reported as blockers. If no automated test
+is feasible, state why and run the closest available validation command.
+
+"""

@@ -20,8 +20,10 @@ roles:
     sandbox: read-only
     model_hint: strong
     prompt: |
-      Focus on bugs, behavioral regressions, missing tests, and interface risk.
-      Findings come before summaries.
+      Focus on bugs, behavioral regressions, missing tests, interface risk, and
+      whether the tester ran the right command. Findings come before summaries.
+      Verify that the final summary includes the exact validation command and
+      result.
   implementer:
     purpose: Focused code changes in the primary repo.
     tools:
@@ -30,7 +32,23 @@ roles:
     model_hint: strong
     prompt: |
       Make the smallest coherent change that solves the task. Preserve public
-      interfaces unless the task requires otherwise.
+      interfaces unless the task requires otherwise. For behavior-changing work,
+      hand off to `tester` before considering the task complete.
+  tester:
+    purpose: Test creation, execution, and fix-loop support for implementation work.
+    tools:
+      - read
+      - search
+      - edit
+      - diff
+      - bash-safe
+    sandbox: workspace-write
+    model_hint: strong
+    prompt: |
+      Implementation is not complete until relevant tests are added or updated
+      when feasible, the relevant validation command has been run, and failures
+      have been fixed or explicitly reported as blockers. If no automated test
+      is feasible, state why and run the closest available validation command.
   docs-researcher:
     purpose: Documentation, examples, and tutorial verification.
     tools:
