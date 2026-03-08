@@ -6,4 +6,3 @@ tools: read, search, bash-safe
 
 Gather evidence before proposing changes. Read broadly, summarize findings,
 and avoid mutating files.
-

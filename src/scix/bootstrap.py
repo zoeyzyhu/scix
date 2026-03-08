@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import site
 import subprocess
 import sys
 from pathlib import Path
@@ -18,7 +19,18 @@ from .constants import (
 )
 from .exceptions import ScixError
 from .generator import find_workspace_root, load_yaml, sync_workspace
-from .scaffold import copy_template_root
+from .scaffold import copy_template_paths, copy_template_root
+
+DEVELOPER_TEMPLATE_PATHS = [
+    ROOT_MARKER,
+    ".agents/.gitkeep",
+    ".claude/.gitkeep",
+    ".codex/.gitkeep",
+    Path("repos/.gitkeep"),
+    Path("repos/README.md"),
+    Path("workspace/.gitkeep"),
+    Path("workspace/README.md"),
+]
 
 
 def perform_up(
@@ -34,19 +46,32 @@ def perform_up(
     target_root = target_root.resolve()
     _ensure_directory_ready(target_root, assume_yes=assume_yes, force=force, prompt=prompt)
     copy_template_root(target_root)
-    changed = [str(path) for path in sync_workspace(target_root)]
-    if not skip_python:
-        ensure_python_bootstrap(target_root)
-        install_scix_into_xenv(target_root)
-        install_science_packages(target_root)
-    if not skip_repos:
-        install_missing_repos(target_root)
-        changed.extend(str(path) for path in sync_workspace(target_root))
-    if check:
-        issues = doctor(target_root)
-        if issues:
-            raise ScixError("\n".join(issues))
-    return changed
+    return _finalize_workspace(
+        target_root,
+        skip_python=skip_python,
+        skip_repos=skip_repos,
+        check=check,
+    )
+
+
+def perform_dev_up(
+    target_root: Path,
+    *,
+    skip_python: bool = False,
+    skip_repos: bool = False,
+    check: bool = False,
+) -> list[str]:
+    target_root = target_root.resolve()
+    _ensure_developer_checkout(target_root)
+    copy_template_paths(target_root, DEVELOPER_TEMPLATE_PATHS)
+    return _finalize_workspace(
+        target_root,
+        skip_python=skip_python,
+        skip_repos=skip_repos,
+        check=check,
+        install_dev_package=True,
+        install_hooks=True,
+    )
 
 
 def install_missing_repos(root: Path | None = None) -> list[Path]:
@@ -72,16 +97,82 @@ def doctor(root: Path | None = None) -> list[str]:
         issues.append("Missing xenv/ virtual environment")
     if shutil.which("pyenv") is None and not (Path.home() / ".pyenv/bin/pyenv").exists():
         issues.append("pyenv is not installed or not on PATH")
+    for skill_path in sorted((root / "ai/skills").glob("*/SKILL.md")):
+        if not _has_yaml_frontmatter(skill_path):
+            issues.append(
+                f"Invalid skill file: {skill_path}. Codex requires YAML frontmatter "
+                "delimited by ---."
+            )
     if shutil.which("codex") is None:
-        issues.append("codex is not on PATH")
+        issues.append(_codex_install_message())
     if shutil.which("claude") is None:
-        issues.append("claude is not on PATH")
+        issues.append(_claude_install_message())
     repo_map = load_yaml(root / "ai/policy/repos.yaml")
     for repo_name, spec in sorted((repo_map.get("repos") or {}).items()):
         repo_path = root / (spec.get("path") or f"repos/{repo_name}")
         if not repo_path.exists():
             issues.append(f"Missing repo clone: {repo_path}")
     return issues
+
+
+def up_guidance(root: Path | None = None) -> list[str]:
+    root = find_workspace_root(root)
+    notes: list[str] = []
+    if (root / "xenv").exists():
+        notes.append("Activate the workspace Python with: source xenv/bin/activate")
+    else:
+        notes.append(
+            "Python bootstrap was skipped, so `xenv/` does not exist yet. "
+            "Run `scix up` again without `--skip-python` when you want a local environment."
+        )
+    if shutil.which(APP_NAME) is None:
+        notes.append(
+            "If the `scix` command is missing in a new shell, run "
+            f"`source {_primary_shell_rc_path()}` or open a new terminal. "
+            "You can always run `python3 -m scix ...`."
+        )
+    if shutil.which("codex") is None:
+        notes.append(_codex_install_message())
+    if shutil.which("claude") is None:
+        notes.append(_claude_install_message())
+    if _is_ssh_session():
+        notes.append(
+            "SSH session detected. In ChatGPT Security Settings, enable device "
+            "code authorization, then run `codex login --device-auth`."
+        )
+    return notes
+
+
+def dev_up_guidance(root: Path | None = None) -> list[str]:
+    root = find_workspace_root(root)
+    notes: list[str] = []
+    if (root / "xenv").exists():
+        notes.append("Activate the workspace Python with: source xenv/bin/activate")
+    else:
+        notes.append(
+            "Python bootstrap was skipped, so `xenv/` does not exist yet. "
+            "Run `./scripts/dev-up.sh` again without `--skip-python` when you want "
+            "the contributor environment."
+        )
+    if shutil.which(APP_NAME) is None:
+        notes.append(
+            "If the `scix` command is missing in a new shell, run "
+            f"`source {_primary_shell_rc_path()}` or open a new terminal. "
+            "You can always run `python3 -m scix ...`."
+        )
+    if shutil.which("codex") is None:
+        notes.append(_codex_install_message())
+    if shutil.which("claude") is None:
+        notes.append(_claude_install_message())
+    if _is_ssh_session():
+        notes.append(
+            "SSH session detected. In ChatGPT Security Settings, enable device "
+            "code authorization, then run `codex login --device-auth`."
+        )
+    if (root / "xenv").exists():
+        notes.append("Install Git hooks with: xenv/bin/pre-commit install")
+        notes.append("Run all contributor checks with: xenv/bin/pre-commit run --all-files")
+    return notes
 
 
 def ensure_python_bootstrap(root: Path) -> None:
@@ -114,10 +205,21 @@ def ensure_python_bootstrap(root: Path) -> None:
     )
 
 
-def install_scix_into_xenv(root: Path) -> None:
+def install_scix_into_xenv(
+    root: Path,
+    *,
+    package_root: Path | None = None,
+    editable: bool = False,
+    include_dev: bool = False,
+) -> None:
     pip = root / "xenv/bin/pip"
-    source_root = Path(__file__).resolve().parents[2]
-    if (source_root / "pyproject.toml").exists():
+    source_root = package_root or Path(__file__).resolve().parents[2]
+    if editable:
+        requirement = "."
+        if include_dev:
+            requirement = ".[dev]"
+        _run([str(pip), "install", "-e", requirement], cwd=source_root)
+    elif (source_root / "pyproject.toml").exists():
         _run([str(pip), "install", "-e", str(source_root)], cwd=root)
     else:
         _run([str(pip), "install", APP_NAME], cwd=root)
@@ -132,6 +234,13 @@ def install_science_packages(root: Path) -> None:
         if spec.get("pip_package")
     ]
     _run([str(pip), "install", *packages], cwd=root)
+
+
+def install_pre_commit_hooks(root: Path) -> None:
+    pre_commit = root / "xenv/bin/pre-commit"
+    if not pre_commit.exists():
+        raise ScixError("pre-commit is not installed in xenv/.")
+    _run([str(pre_commit), "install"], cwd=root)
 
 
 def ensure_pyenv_installed() -> None:
@@ -219,11 +328,24 @@ def resolve_pyenv_binary() -> Path:
 def update_shell_startup_files() -> None:
     shell = Path(os.environ.get("SHELL", "")).name
     home = Path.home()
+    user_base_block = _render_user_base_path_block()
     targets: list[tuple[Path, str]]
     if shell == "zsh":
-        targets = [(home / ".zprofile", PYENV_PATH_BLOCK), (home / ".zshrc", PYENV_INIT_BLOCK)]
+        targets = [
+            (home / ".zprofile", user_base_block),
+            (home / ".zprofile", PYENV_PATH_BLOCK),
+            (home / ".zshrc", user_base_block),
+            (home / ".zshrc", PYENV_PATH_BLOCK),
+            (home / ".zshrc", PYENV_INIT_BLOCK),
+        ]
     else:
-        targets = [(home / ".bash_profile", PYENV_PATH_BLOCK), (home / ".bashrc", PYENV_INIT_BLOCK)]
+        targets = [
+            (home / ".bash_profile", user_base_block),
+            (home / ".bash_profile", PYENV_PATH_BLOCK),
+            (home / ".bashrc", user_base_block),
+            (home / ".bashrc", PYENV_PATH_BLOCK),
+            (home / ".bashrc", PYENV_INIT_BLOCK),
+        ]
     for path, block in targets:
         existing = path.read_text(encoding="utf-8") if path.exists() else ""
         if block.strip() in existing:
@@ -264,6 +386,19 @@ def _ensure_directory_ready(
         raise ScixError("Aborted by user")
 
 
+def _ensure_developer_checkout(target_root: Path) -> None:
+    required = [
+        target_root / "pyproject.toml",
+        target_root / "README.md",
+        target_root / "src/scix",
+        target_root / "ai/policy/repos.yaml",
+    ]
+    missing = [path for path in required if not path.exists()]
+    if missing:
+        joined = ", ".join(str(path) for path in missing)
+        raise ScixError(f"Developer bootstrap expects a cloned scix source repo. Missing: {joined}")
+
+
 def _detect_package_manager() -> str | None:
     for candidate in ("apt-get", "dnf", "yum"):
         if shutil.which(candidate):
@@ -279,6 +414,87 @@ def _pyenv_env(root: Path) -> dict[str, str]:
     env["PYENV_VERSION"] = DEFAULT_PYTHON
     env["PWD"] = str(root)
     return env
+
+
+def _finalize_workspace(
+    root: Path,
+    *,
+    skip_python: bool,
+    skip_repos: bool,
+    check: bool,
+    install_dev_package: bool = False,
+    install_hooks: bool = False,
+) -> list[str]:
+    changed = [str(path) for path in sync_workspace(root)]
+    if not skip_python:
+        ensure_python_bootstrap(root)
+        if install_dev_package:
+            install_scix_into_xenv(
+                root,
+                package_root=root,
+                editable=True,
+                include_dev=True,
+            )
+        else:
+            install_scix_into_xenv(root)
+        install_science_packages(root)
+        if install_hooks:
+            install_pre_commit_hooks(root)
+    if not skip_repos:
+        install_missing_repos(root)
+        changed.extend(str(path) for path in sync_workspace(root))
+    if check:
+        issues = doctor(root)
+        if issues:
+            raise ScixError("\n".join(issues))
+    return changed
+
+
+def _codex_install_message() -> str:
+    if sys.platform.startswith("linux"):
+        return (
+            "codex is not on PATH. On Ubuntu or Debian, run `sudo apt install npm` "
+            "and then `sudo npm install -g @openai/codex`."
+        )
+    return "codex is not on PATH. Install Codex CLI with `npm install -g @openai/codex`."
+
+
+def _claude_install_message() -> str:
+    return "claude is not on PATH. Install Claude Code, then run `claude auth login`."
+
+
+def _has_yaml_frontmatter(path: Path) -> bool:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return False
+    return any(line.strip() == "---" for line in lines[1:])
+
+
+def _is_ssh_session() -> bool:
+    return any(os.environ.get(name) for name in ("SSH_CONNECTION", "SSH_TTY", "SSH_CLIENT"))
+
+
+def _primary_shell_rc_path() -> str:
+    shell = Path(os.environ.get("SHELL", "")).name
+    if shell == "zsh":
+        return "~/.zshrc"
+    return "~/.bashrc"
+
+
+def _render_user_base_path_block() -> str:
+    user_base_bin = Path(site.getuserbase()) / "bin"
+    return (
+        "# >>> scix user base bin >>>\n"
+        f'SCIX_USER_BASE_BIN="{user_base_bin}"\n'
+        'if [ -d "$SCIX_USER_BASE_BIN" ]; then\n'
+        '  case ":$PATH:" in\n'
+        '    *":$SCIX_USER_BASE_BIN:"*) ;;\n'
+        '    *) export PATH="$SCIX_USER_BASE_BIN:$PATH" ;;\n'
+        "  esac\n"
+        "fi\n"
+        "unset SCIX_USER_BASE_BIN\n"
+        "# <<< scix user base bin <<<\n"
+    )
 
 
 def _run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None) -> None:

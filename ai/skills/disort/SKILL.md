@@ -1,3 +1,8 @@
+---
+name: disort
+description: Use DISORT-specific repo routing and guardrails for numerical or solver work.
+---
+
 # DISORT
 
 Use this skill for DISORT numerics, quadrature, solver semantics, and RT

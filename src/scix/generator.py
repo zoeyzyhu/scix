@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 
 import yaml
@@ -216,25 +215,19 @@ def render_claude_settings() -> str:
             "PreToolUse": [
                 {
                     "matcher": "Bash",
-                    "hooks": [
-                        {"type": "command", "command": "./ai/hooks/pre_tool_guard.sh"}
-                    ],
+                    "hooks": [{"type": "command", "command": "./ai/hooks/pre_tool_guard.sh"}],
                 }
             ],
             "PostToolUse": [
                 {
                     "matcher": "Edit",
-                    "hooks": [
-                        {"type": "command", "command": "./ai/hooks/post_edit_format.sh"}
-                    ],
+                    "hooks": [{"type": "command", "command": "./ai/hooks/post_edit_format.sh"}],
                 }
             ],
             "Stop": [
                 {
                     "matcher": "*",
-                    "hooks": [
-                        {"type": "command", "command": "./ai/hooks/session_context.sh"}
-                    ],
+                    "hooks": [{"type": "command", "command": "./ai/hooks/session_context.sh"}],
                 }
             ],
         }
@@ -263,15 +256,8 @@ def render_codex_agent(role_name: str, spec: dict) -> str:
 def render_claude_agent(role_name: str, spec: dict) -> str:
     tools = ", ".join(spec.get("tools") or [])
     description = spec.get("purpose", "")
-    prompt = spec.get("prompt", "")
-    return (
-        "---\n"
-        f"name: {role_name}\n"
-        f"description: {description}\n"
-        f"tools: {tools}\n"
-        "---\n\n"
-        f"{prompt}\n"
-    )
+    prompt = (spec.get("prompt") or "").strip()
+    return f"---\nname: {role_name}\ndescription: {description}\ntools: {tools}\n---\n\n{prompt}\n"
 
 
 def _write_or_check(path: Path, content: str, changed: list[Path], check: bool) -> None:
@@ -288,19 +274,12 @@ def _write_or_check(path: Path, content: str, changed: list[Path], check: bool) 
 
 
 def _sync_generated_tree(source: Path, target: Path, changed: list[Path], check: bool) -> None:
-    if check:
-        for path in source.rglob("*"):
-            if path.is_dir():
-                continue
-            relative = path.relative_to(source)
-            destination = target / relative
-            expected = path.read_text(encoding="utf-8")
-            _write_or_check(destination, expected, changed, check)
-        return
-
-    if target.exists():
-        shutil.rmtree(target)
-    shutil.copytree(source, target)
-    for path in target.rglob("*.sh"):
-        path.chmod(0o755)
-    changed.append(target)
+    for path in source.rglob("*"):
+        relative = path.relative_to(source)
+        destination = target / relative
+        if path.is_dir():
+            if not check:
+                destination.mkdir(parents=True, exist_ok=True)
+            continue
+        expected = path.read_text(encoding="utf-8")
+        _write_or_check(destination, expected, changed, check)

@@ -10,7 +10,7 @@ and it builds the workspace for you.
 
 - a shared AI policy system for Codex and Claude
 - a `repos/` folder for cloned reference repositories
-- a `workspace/` folder for your own experiments and notes
+- a `workspace/` folder for your own scripts, models, experiments and notes
 - a local Python environment named `xenv/`
 - generated `AGENTS.md`, `CLAUDE.md`, skills, hooks, and tool configs
 
@@ -40,6 +40,10 @@ If you are using macOS and have never opened the Terminal:
 
 ## Quick start
 
+This quick start is for a brand new working folder. If you cloned the `scix`
+source repository, skip to [Developers / Contributors](#developers--contributors)
+instead.
+
 Create a brand new empty folder, then move into it:
 
 ```bash
@@ -50,13 +54,13 @@ cd my-scix-work
 Install `scix`:
 
 ```bash
-pip install scix
+python3 -m pip install --user scix
 ```
 
 Run the setup command:
 
 ```bash
-scix up
+python3 -m scix up
 ```
 
 `scix` will ask you to confirm that:
@@ -65,6 +69,33 @@ scix up
 - this directory is where you want to do your `scix` work
 
 If the folder is not empty, `scix up` stops by default. That is intentional.
+
+If the short `scix` command already works in your shell, `scix up` is the same
+thing as `python3 -m scix up`.
+
+## If `scix` says "command not found"
+
+This usually means Python installed the `scix` command into your user scripts
+directory, but that directory is not on your shell `PATH` yet.
+
+Two safe fixes:
+
+1. Keep using the module form:
+
+```bash
+python3 -m scix up
+```
+
+2. Or add the user scripts directory to your shell path on Ubuntu or Debian:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+After `scix up` runs, it also tries to add your user-level Python scripts
+directory to your shell startup file automatically. Open a new terminal after
+setup if the short `scix` command still does not appear right away.
 
 ## What `scix up` will do
 
@@ -89,6 +120,18 @@ source xenv/bin/activate
 When it is active, your Terminal prompt usually changes. From then on, Python
 and pip commands use the local environment inside this workspace.
 
+## Install Codex CLI if needed
+
+If `codex` is missing on Ubuntu or Debian, install it with:
+
+```bash
+sudo apt install npm
+sudo npm install -g @openai/codex
+```
+
+`sudo` means the command uses administrator permission. Your machine may ask for
+your password.
+
 ## Log into Codex
 
 Open a Terminal in your `scix` workspace and run:
@@ -103,11 +146,16 @@ If you are using an API key instead of the normal login flow:
 printenv OPENAI_API_KEY | codex login --with-api-key
 ```
 
-To check whether you are already logged in:
+If you are in an SSH terminal, first enable device code authorization in
+ChatGPT Security Settings. Then use:
 
 ```bash
-codex login status
+codex login --device-auth
 ```
+
+Some Codex CLI versions use a flag-style login command instead of the
+subcommand form. If `codex login` is rejected on your installed version, check
+`codex --help` and use the login form shown there.
 
 ## Log into Claude
 
@@ -121,12 +169,6 @@ If you use a long-lived token flow:
 
 ```bash
 claude setup-token
-```
-
-To check whether you are already logged in:
-
-```bash
-claude auth status
 ```
 
 ## Use VS Code
@@ -189,6 +231,15 @@ Regenerate all Codex and Claude files:
 scix sync
 ```
 
+If the short `scix` command is still missing in your current shell, every
+command above also works in module form:
+
+```bash
+python3 -m scix sync
+python3 -m scix doctor
+python3 -m scix install-repos
+```
+
 Check whether the workspace is healthy:
 
 ```bash
@@ -201,7 +252,45 @@ Clone any missing reference repositories again:
 scix install-repos
 ```
 
-## Notes for source-repo developers
+## Developers / Contributors
 
-This GitHub repository is the source of truth for the `scix` package. End users
-normally do not clone it. They install from PyPI and run `scix up`.
+If you want to work on `scix` itself, do not start from `pip install scix`.
+Clone the source repository instead:
+
+```bash
+git clone https://github.com/zoeyzyhu/scix.git
+cd scix
+./scripts/dev-up.sh
+```
+
+`./scripts/dev-up.sh` is the contributor bootstrap for a cloned source repo. It
+keeps the existing source files in place, creates any missing workspace files,
+creates `xenv/`, installs `scix` in editable mode with developer dependencies,
+installs the science packages, clones missing reference repos, installs Git
+hooks, and regenerates the generated Codex and Claude files.
+
+After that, activate the environment:
+
+```bash
+source xenv/bin/activate
+```
+
+If you want to install the Git hooks yourself again later, run:
+
+```bash
+xenv/bin/pre-commit install
+```
+
+To run all contributor checks locally:
+
+```bash
+xenv/bin/pre-commit run --all-files
+pytest
+python -m build
+scix sync --check
+```
+
+The contributor path is separate on purpose:
+
+- end users should still create a fresh folder and run `python3 -m scix up`
+- contributors should clone the repo and run `./scripts/dev-up.sh`

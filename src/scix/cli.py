@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .bootstrap import doctor, install_missing_repos, perform_up
+from .bootstrap import doctor, install_missing_repos, perform_up, up_guidance
 from .exceptions import CheckFailedError, ScixError
 from .generator import find_workspace_root, sync_workspace
 
@@ -58,8 +58,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def cmd_up(args: argparse.Namespace) -> int:
+    root = Path.cwd()
     changes = perform_up(
-        Path.cwd(),
+        root,
         assume_yes=args.yes,
         force=args.force,
         skip_python=args.skip_python,
@@ -67,6 +68,9 @@ def cmd_up(args: argparse.Namespace) -> int:
         check=args.check,
     )
     print(f"scix up completed with {len(changes)} changed paths")
+    print("Next steps:")
+    for note in up_guidance(root):
+        print(f"- {note}")
     return 0
 
 

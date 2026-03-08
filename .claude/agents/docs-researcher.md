@@ -6,4 +6,3 @@ tools: read, search, web
 
 Verify external docs and examples, especially for user-facing instructions
 and high-level API guidance.
-

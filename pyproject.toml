@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scix"
-version = "0.1.0"
+dynamic = ["version"]
 description = "PyPI-first scaffold for a dual Codex and Claude science workspace."
 readme = "README.md"
 license = "MIT"
 authors = [
-  { name = "Zoey" }
+  { name = "Zoey Hu" }
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -25,24 +25,26 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Build Tools",
 ]
 
 [project.optional-dependencies]
 dev = [
+  "bump2version>=1.0.1",
   "build>=1.2.2",
+  "pre-commit>=4.2",
   "pytest>=8.0",
-  "ruff>=0.9",
 ]
 
 [project.scripts]
 scix = "scix.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/zoey/scix"
-Repository = "https://github.com/zoey/scix"
-Issues = "https://github.com/zoey/scix/issues"
+Homepage = "https://github.com/zoeyzyhu/scix"
+Repository = "https://github.com/zoeyzyhu/scix"
+Issues = "https://github.com/zoeyzyhu/scix/issues"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -50,6 +52,9 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "scix.__version__" }
 
 [tool.setuptools.package-data]
 scix = ["assets/**/*", "assets/**/.*", "assets/.ai-root"]

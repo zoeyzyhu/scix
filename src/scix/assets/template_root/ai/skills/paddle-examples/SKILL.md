@@ -1,3 +1,8 @@
+---
+name: paddle-examples
+description: Route example, notebook, and high-level tutorial work through the paddle repo.
+---
+
 # Paddle Examples
 
 Use this skill when the task needs examples, tutorials, notebooks, or a simpler

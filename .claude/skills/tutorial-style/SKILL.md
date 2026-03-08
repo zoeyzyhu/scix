@@ -1,3 +1,8 @@
+---
+name: tutorial-style
+description: Write beginner-facing documentation with explicit steps and low assumed knowledge.
+---
+
 # Tutorial Style
 
 Use this skill when writing beginner-facing guides, walkthroughs, or setup docs.

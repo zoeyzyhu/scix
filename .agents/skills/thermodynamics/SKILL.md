@@ -1,3 +1,8 @@
+---
+name: thermodynamics
+description: Route thermodynamics and EOS work through the kintera source-of-truth repo.
+---
+
 # Thermodynamics
 
 Use this skill when a task involves thermodynamics, EOS, chemistry kernels, or

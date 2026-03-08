@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from scix.bootstrap import perform_up
+from scix.bootstrap import doctor, perform_dev_up, perform_up
 from scix.exceptions import CheckFailedError, ScixError
 from scix.generator import sync_workspace
-from scix.scaffold import copy_template_root
+from scix.scaffold import copy_template_paths, copy_template_root
 
 
 def test_sync_workspace_generates_expected_files(tmp_path: Path) -> None:
@@ -18,6 +18,11 @@ def test_sync_workspace_generates_expected_files(tmp_path: Path) -> None:
     assert (tmp_path / ".codex/config.toml").exists()
     assert (tmp_path / ".claude/settings.json").exists()
     assert (tmp_path / ".agents/skills/repo-router/SKILL.md").exists()
+    assert (
+        (tmp_path / ".agents/skills/repo-router/SKILL.md")
+        .read_text(encoding="utf-8")
+        .startswith("---\n")
+    )
     assert (tmp_path / ".claude/agents/explorer.md").exists()
     assert (tmp_path / ".codex/agents/explorer.toml").exists()
     assert (tmp_path / "ai/generated/repos/kintera/AGENTS.md").exists()
@@ -49,6 +54,14 @@ def test_perform_up_rejects_non_empty_directory_without_force(tmp_path: Path) ->
         perform_up(tmp_path, assume_yes=True, skip_python=True, skip_repos=True)
 
 
+def test_perform_up_rejects_repo_shaped_directory_without_force(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text("developer checkout\n", encoding="utf-8")
+    (tmp_path / "src/scix").mkdir(parents=True)
+
+    with pytest.raises(ScixError):
+        perform_up(tmp_path, assume_yes=True, skip_python=True, skip_repos=True)
+
+
 def test_perform_up_force_allows_non_empty_directory(tmp_path: Path) -> None:
     (tmp_path / "note.txt").write_text("hello\n", encoding="utf-8")
 
@@ -56,3 +69,38 @@ def test_perform_up_force_allows_non_empty_directory(tmp_path: Path) -> None:
 
     assert (tmp_path / ".ai-root").exists()
     assert (tmp_path / "README.md").exists()
+
+
+def test_doctor_reports_invalid_skill_frontmatter(tmp_path: Path) -> None:
+    copy_template_root(tmp_path)
+    skill_path = tmp_path / "ai/skills/repo-router/SKILL.md"
+    skill_path.write_text("# broken\n", encoding="utf-8")
+
+    issues = doctor(tmp_path)
+
+    assert any("Invalid skill file" in issue for issue in issues)
+
+
+def test_perform_dev_up_backfills_workspace_without_overwriting_canonical_files(
+    tmp_path: Path,
+) -> None:
+    copy_template_paths(tmp_path, ["ai"])
+    (tmp_path / "src/scix").mkdir(parents=True)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "docs").mkdir()
+    (tmp_path / ".github/workflows").mkdir(parents=True)
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'scix'\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("custom contributor README\n", encoding="utf-8")
+    (tmp_path / "ai/policy/workspace.md").write_text("custom workspace policy\n", encoding="utf-8")
+
+    perform_dev_up(tmp_path, skip_python=True, skip_repos=True)
+
+    assert (tmp_path / "README.md").read_text(encoding="utf-8") == "custom contributor README\n"
+    assert (tmp_path / "ai/policy/workspace.md").read_text(
+        encoding="utf-8"
+    ) == "custom workspace policy\n"
+    assert (tmp_path / ".ai-root").exists()
+    assert (tmp_path / "repos/README.md").exists()
+    assert (tmp_path / "workspace/README.md").exists()
+    assert (tmp_path / ".codex/config.toml").exists()
+    assert (tmp_path / ".claude/settings.json").exists()

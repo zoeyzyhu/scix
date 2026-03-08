@@ -1,3 +1,8 @@
+---
+name: cross-repo-read
+description: Read neighboring repositories before making a scoped change in the primary repo.
+---
+
 # Cross Repo Read
 
 Use this skill when a task spans more than one repository.
