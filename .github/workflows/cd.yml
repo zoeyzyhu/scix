@@ -63,8 +63,49 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-      - name: Push version bump and tag
-        run: git push origin HEAD:main --follow-tags
+      - name: Push version bump commit
+        run: git push origin HEAD:main
+
+      - name: Push version tag
+        run: git push origin refs/tags/v${{ steps.bump_version.outputs.new_version }}
+
+      - name: Create or update GitHub release
+        if: ${{ success() }}
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        env:
+          TAG_NAME: v${{ steps.bump_version.outputs.new_version }}
+          RELEASE_NAME: scix v${{ steps.bump_version.outputs.new_version }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const tag = process.env.TAG_NAME;
+            const name = process.env.RELEASE_NAME;
+            const payload = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name,
+              draft: false,
+              prerelease: false,
+              generate_release_notes: true,
+            };
+
+            try {
+              const existing = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+              await github.rest.repos.updateRelease({
+                ...payload,
+                release_id: existing.data.id,
+              });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+              await github.rest.repos.createRelease(payload);
+            }
 
       - name: Comment on merged PR
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
