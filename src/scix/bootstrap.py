@@ -230,11 +230,18 @@ def _sync_workspace(root: Path, check: bool = False) -> list[Path]:
 
 
 def _codex_install_message() -> str:
-    return "codex is not on PATH. Install Codex CLI, then run `codex login`."
+    return (
+        "Codex is not on PATH. If you use Codex, install Codex CLI, then run `codex login`. "
+        "Otherwise, you can ignore this message if you only use Claude or other agents."
+    )
 
 
 def _claude_install_message() -> str:
-    return "claude is not on PATH. Install Claude Code, then run `claude auth login`."
+    return (
+        "Claude is not on PATH. If you use Claude, install Claude Code, then run "
+        "`claude auth login`. Otherwise, you can ignore this message if you only use Codex or "
+        "other agents."
+    )
 
 
 def _has_yaml_frontmatter(path: Path) -> bool:
