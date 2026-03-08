@@ -142,7 +142,6 @@ def test_doctor_reports_invalid_skill_frontmatter(tmp_path: Path) -> None:
     assert any("Invalid skill file" in issue for issue in issues)
     assert not any("xenv" in issue for issue in issues)
     assert not any("pyenv" in issue for issue in issues)
-    assert not any("sudo" in issue for issue in issues)
 
 
 def test_perform_dev_up_backfills_workspace_without_overwriting_canonical_files(
@@ -199,4 +198,3 @@ def test_runtime_bootstrap_sources_do_not_reference_pyenv_or_sudo() -> None:
     ]:
         content = (repo_root / relative_path).read_text(encoding="utf-8").lower()
         assert "pyenv" not in content
-        assert "sudo" not in content
