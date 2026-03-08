@@ -1,5 +1,1 @@
-"""scix package."""
-
-__all__ = ["__version__"]
-
-__version__ = "0.1.8"
+from .__version__ import __version__ as __version__

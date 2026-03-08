@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools>=69", "wheel", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -32,7 +32,6 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
-  "bump2version>=1.0.1",
   "build>=1.2.2",
   "pre-commit>=4.2",
   "pytest>=8.0",
@@ -72,3 +71,8 @@ target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "no-local-version"
+write_to = "src/scix/__version__.py"
