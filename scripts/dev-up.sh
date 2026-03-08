@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-
-cd "${REPO_ROOT}"
-export PYTHONPATH="${REPO_ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
-
-exec python3 -m scix.dev_setup "$@"
+echo "./scripts/dev-up.sh is deprecated; use 'scix dev' instead." >&2
+exec scix dev "$@"

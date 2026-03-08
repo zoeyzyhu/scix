@@ -5,7 +5,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .bootstrap import doctor, install_missing_repos, perform_up, up_guidance
+from .bootstrap import (
+    dev_up_guidance,
+    doctor,
+    install_missing_repos,
+    perform_dev_up,
+    perform_up,
+    up_guidance,
+)
 from .exceptions import CheckFailedError, ScixError
 from .generator import find_workspace_root, sync_workspace
 
@@ -31,6 +38,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="Run doctor at the end and fail on issues",
     )
     up_parser.set_defaults(func=cmd_up)
+
+    dev_parser = subparsers.add_parser(
+        "dev",
+        help="Bootstrap a cloned scix source checkout for contributors",
+    )
+    dev_parser.add_argument(
+        "--skip-repos",
+        action="store_true",
+        help="Skip cloning reference repositories",
+    )
+    dev_parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Run doctor at the end and fail on issues",
+    )
+    dev_parser.set_defaults(func=cmd_dev)
 
     sync_parser = subparsers.add_parser(
         "sync",
@@ -67,6 +90,20 @@ def cmd_up(args: argparse.Namespace) -> int:
     print(f"\n scix up completed with {len(changes)} changed paths")
     print("\n\nNext steps:")
     for note in up_guidance(root):
+        print(f"- {note}")
+    return 0
+
+
+def cmd_dev(args: argparse.Namespace) -> int:
+    root = Path.cwd()
+    changes = perform_dev_up(
+        root,
+        skip_repos=args.skip_repos,
+        check=args.check,
+    )
+    print(f"\nscix developer bootstrap completed with {len(changes)} changed paths")
+    print("\n\nNext steps:")
+    for note in dev_up_guidance(root):
         print(f"- {note}")
     return 0
 
