@@ -137,7 +137,7 @@ If `codex` is missing on Ubuntu or Debian, install it with:
 
 ```bash
 sudo apt install npm
-sudo npm install -g @openai/codex
+npm install -g @openai/codex
 ```
 
 `sudo` means the command uses administrator permission. Your machine may ask for

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import textwrap
 from pathlib import Path
 
 from .constants import APP_NAME, ROOT_MARKER, TRIVIAL_HIDDEN_NAMES
@@ -75,6 +76,108 @@ def install_missing_repos(root: Path | None = None) -> list[Path]:
 
 def doctor(root: Path | None = None) -> list[str]:
     root = _find_workspace_root(root)
+
+    width = shutil.get_terminal_size((90, 20)).columns
+    width = width - 10  # leave margin
+
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    CYAN = "\033[36m"
+    GREEN = "\033[32m"
+    RED = "\033[31m"
+    RESET = "\033[0m"
+
+    rule = f"{DIM}{'─' * width}{RESET}"
+
+    def wrap(text: str, indent: int = 0) -> list[str]:
+        return textwrap.wrap(
+            text,
+            width=width,
+            initial_indent=" " * indent,
+            subsequent_indent=" " * indent,
+        )
+
+    def command_box(cmds: list[str]) -> list[str]:
+        padded_cmds = [f"  {c}  " for c in cmds]
+        box_w = min(max(len(c) for c in padded_cmds), width - 10)
+        top = f"    ┌{'─' * box_w}┐"
+        mid_lines = [f"    │{CYAN}{c.ljust(box_w)}{RESET}│" for c in padded_cmds]
+        bot = f"    └{'─' * box_w}┘"
+        return [top] + mid_lines + [bot]
+
+    def issue(title: str, text: str | None = None, cmds: list[str] | None = None) -> list[str]:
+        lines = [f"{RED}✗{RESET} {BOLD}{title}{RESET}"]
+        if text:
+            lines += wrap(text, indent=3)
+        if cmds:
+            lines += command_box(cmds)
+        return lines
+
+    notes: list[str] = []
+
+    notes.append(rule)
+    notes.append(f"{BOLD}Workspace Doctor Report{RESET}".center(width))
+    notes.append(rule)
+    notes.append("")
+
+    # Check workspace root marker
+    if not (root / ROOT_MARKER).exists():
+        notes += issue(
+            "Missing workspace marker",
+            f"{ROOT_MARKER} not found in {root}",
+        )
+
+    # Check skills for YAML frontmatter
+    for skill_path in sorted((root / "ai/skills").glob("*/SKILL.md")):
+        if not _has_yaml_frontmatter(skill_path):
+            notes += issue(
+                "Invalid skill file",
+                f"{skill_path} missing required YAML frontmatter (---).",
+            )
+
+    # Check required CLI tools
+    if shutil.which("codex") is None:
+        notes += issue(
+            "Codex CLI not found",
+            _codex_install_message(),
+            [
+                "sudo apt install npm",
+                "npm install -g @openai/codex",
+                "codex --help",
+            ],
+        )
+
+    if shutil.which("claude") is None:
+        notes += issue(
+            "Claude CLI not found",
+            _claude_install_message(),
+            [
+                "sudo apt install npm",
+                "npm install -g @anthropic-ai/claude-code",
+                "claude --help",
+            ],
+        )
+
+    # Check repository clones
+    repo_map = _load_yaml(root / "ai/policy/repos.yaml")
+    for repo_name, spec in sorted((repo_map.get("repos") or {}).items()):
+        repo_path = root / (spec.get("path") or f"repos/{repo_name}")
+        if not repo_path.exists():
+            notes += issue(
+                "Missing repo clone",
+                f"{repo_name} expected at {repo_path}",
+                [f"git clone {spec.get('url', '<repo-url>')} {repo_path}"],
+            )
+
+    if not notes:
+        notes.append(f"{GREEN}✓{RESET} All checks passed!")
+
+    notes.append(rule)
+    return notes
+
+
+def doctor0(root: Path | None = None) -> list[str]:
+    root = _find_workspace_root(root)
     issues: list[str] = []
     if not (root / ROOT_MARKER).exists():
         issues.append(f"Missing {ROOT_MARKER} in {root}")
@@ -98,52 +201,194 @@ def doctor(root: Path | None = None) -> list[str]:
 
 def up_guidance(root: Path | None = None) -> list[str]:
     root = _find_workspace_root(root)
-    notes = [
-        "Create and activate `xenv/` yourself before installing packages into this workspace.",
-        "Recommended environment setup: `python3 -m venv xenv`, `source xenv/bin/activate`, "
-        "`pip install --upgrade pip`, `pip install scix`, and "
-        "`pip install pydisort pyharp kintera snapy paddle`.",
-    ]
+
+    width = shutil.get_terminal_size((90, 20)).columns
+    width = width - 10  # leave margin
+
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    CYAN = "\033[36m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    RESET = "\033[0m"
+
+    rule = f"{DIM}{'─' * width}{RESET}"
+
+    def wrap(text: str, indent: int = 0) -> list[str]:
+        return textwrap.wrap(
+            text,
+            width=width,
+            initial_indent=" " * indent,
+            subsequent_indent=" " * indent,
+        )
+
+    def command_box(cmds: list[str]) -> list[str]:
+        padded_cmds = [f"  {c}  " for c in cmds]
+        box_w = min(max(len(c) for c in padded_cmds), width - 10)
+        top = f"    ┌{'─' * box_w}┐"
+        mid_lines = [f"    │{CYAN}{c.ljust(box_w)}{RESET}│" for c in padded_cmds]
+        bot = f"    └{'─' * box_w}┘"
+        return [top] + mid_lines + [bot]
+
+    def step(title: str, text: str | None = None, cmds: list[str] | None = None) -> list[str]:
+        lines = [f"{GREEN}✓{RESET} {BOLD}{title}{RESET}"]
+        if text:
+            lines += wrap(text, indent=3)
+        if cmds:
+            lines += command_box(cmds)
+        return lines
+
+    notes: list[str] = []
+
+    notes.append(rule)
+    notes.append(f"{BOLD}Workspace Setup Guidance{RESET}".center(width))
+    notes.append(rule)
+    notes.append("")
+
+    # Step 1: Environment setup
+    notes += step(
+        "1. Prepare Python environment",
+        "Create and activate `xenv/` yourself before installing packages.",
+        ["python3 -m venv xenv", "source xenv/bin/activate"],
+    )
+
+    # Step 2: Install core packages
+    notes += step(
+        "2. Install core packages",
+        "Recommended environment setup:",
+        [
+            "pip install --upgrade pip",
+            "pip install scix",
+            "pip install pydisort pyharp kintera snapy paddle",
+        ],
+    )
+
+    # Warnings for missing commands
     if shutil.which(APP_NAME) is None:
-        notes.append(
-            "If the `scix` command is missing, activate `xenv/` and reinstall `scix`, or run "
-            "`python3 -m scix ...` from an environment where the package is installed."
-        )
+        notes.append(f"{YELLOW}!{RESET} {BOLD}`scix` command not found{RESET}")
+        notes += wrap(_virtual_env_message(), indent=3)
+
     if shutil.which("codex") is None:
-        notes.append(_codex_install_message())
+        notes.append(f"{YELLOW}!{RESET} {BOLD}Codex CLI not detected{RESET}")
+        notes += wrap(_codex_install_message(), indent=3)
+
     if shutil.which("claude") is None:
-        notes.append(_claude_install_message())
+        notes.append(f"{YELLOW}!{RESET} {BOLD}Claude CLI not detected{RESET}")
+        notes += wrap(_claude_install_message(), indent=3)
+
     if _is_ssh_session():
-        notes.append(
-            "SSH session detected. In ChatGPT Security Settings, enable device "
-            "code authorization, then run `codex login --device-auth`."
+        notes.append(f"{YELLOW}!{RESET} {BOLD}SSH session detected{RESET}")
+        notes += wrap(
+            "Enable device code authorization in ChatGPT Security Settings.",
+            indent=3,
         )
+        notes += command_box(["codex login --device-auth"])
+
+    notes.append(rule)
     return notes
 
 
 def dev_up_guidance(root: Path | None = None) -> list[str]:
     root = _find_workspace_root(root)
-    notes = [
-        "Use a manually created contributor environment at `xenv/`.",
-        "Recommended contributor setup: `python3 -m venv xenv`, `source xenv/bin/activate`, "
-        "`pip install -e .[dev]`, `pip install pydisort pyharp kintera snapy paddle`, "
-        "and `xenv/bin/pre-commit install`.",
-        "Run all contributor checks with: xenv/bin/pre-commit run --all-files",
-    ]
+
+    width = shutil.get_terminal_size((90, 20)).columns
+    width = width - 10  # leave margin
+
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    CYAN = "\033[36m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    RESET = "\033[0m"
+
+    rule = f"{DIM}{'─' * width}{RESET}"
+
+    def wrap(text: str, indent: int = 0) -> list[str]:
+        return textwrap.wrap(
+            text,
+            width=width,
+            initial_indent=" " * indent,
+            subsequent_indent=" " * indent,
+        )
+
+    def command_box(cmds: list[str]) -> list[str]:
+        """
+        Render one or more commands inside a CLI-style box.
+        Each element of cmds is a separate line.
+        """
+        padded_cmds = [f"  {c}  " for c in cmds]
+        box_w = min(max(len(c) for c in padded_cmds), width - 10)
+        top = f"    ┌{'─' * box_w}┐"
+        mid_lines = [f"    │{CYAN}{c.ljust(box_w)}{RESET}│" for c in padded_cmds]
+        bot = f"    └{'─' * box_w}┘"
+        return [top] + mid_lines + [bot]
+
+    def step(title: str, text: str | None = None, cmds: list[str] | None = None) -> list[str]:
+        lines = [f"{GREEN}✓{RESET} {BOLD}{title}{RESET}"]
+        if text:
+            lines += wrap(text, indent=3)
+        if cmds:
+            lines += command_box(cmds)
+        return lines  # no empty line at the end
+
+    notes: list[str] = []
+
+    notes.append(rule)
+    notes.append(f"{BOLD}Development Environment Setup{RESET}".center(width))
+    notes.append(rule)
+    notes.append("")
+
+    notes += step(
+        "1. Prepare Python environment",
+        "Create and activate `xenv` (or your own virtual environment) before installing packages.",
+        [
+            "python3 -m venv xenv",
+            "source xenv/bin/activate",
+        ],
+    )
+
+    notes += step(
+        "2. Install development dependencies",
+        None,
+        [
+            "pip install -e .",
+            "pip install pydisort pyharp kintera snapy paddle",
+        ],
+    )
+
+    notes += step(
+        "3. Install pre-commit hooks",
+        None,
+        [
+            "pip install pre-commit",
+            "pre-commit install",
+            "pre-commit run --all-files",
+        ],
+    )
+
+    notes.append(rule)
+
+    # Additional environment hints
     if shutil.which(APP_NAME) is None:
-        notes.append(
-            "If the `scix` command is missing, activate `xenv/` and install the package into it "
-            "before using the short command."
-        )
+        notes.append(f"{YELLOW}!{RESET} {BOLD}`scix` command not found{RESET}")
+        notes += wrap(_virtual_env_message(), indent=3)
+
     if shutil.which("codex") is None:
-        notes.append(_codex_install_message())
+        notes.append(f"{YELLOW}!{RESET} {BOLD}Codex CLI not detected{RESET}")
+        notes += wrap(_codex_install_message(), indent=3)
+
     if shutil.which("claude") is None:
-        notes.append(_claude_install_message())
+        notes.append(f"{YELLOW}!{RESET} {BOLD}Claude CLI not detected{RESET}")
+        notes += wrap(_claude_install_message(), indent=3)
+
     if _is_ssh_session():
-        notes.append(
-            "SSH session detected. In ChatGPT Security Settings, enable device "
-            "code authorization, then run `codex login --device-auth`."
+        notes.append(f"{YELLOW}!{RESET} {BOLD}SSH session detected{RESET}")
+        notes += wrap(
+            "Enable device code authorization in ChatGPT Security Settings.",
+            indent=3,
         )
+        notes += command_box(["codex login --device-auth"])
+
     return notes
 
 
@@ -229,12 +474,27 @@ def _sync_workspace(root: Path, check: bool = False) -> list[Path]:
     return sync_workspace(root, check=check)
 
 
+def _virtual_env_message() -> str:
+    return (
+        "`xenv/` virtual environment not found. "
+        "Activate `xenv/` or your own virtual environment and "
+        "install the package before using scix."
+    )
+
+
 def _codex_install_message() -> str:
-    return "codex is not on PATH. Install Codex CLI, then run `codex login`."
+    return (
+        "Codex is not on PATH. If you use Codex, install Codex CLI, then run `codex login`. "
+        "Otherwise, you can 🫣 ignore this message if you only use Claude or other agents."
+    )
 
 
 def _claude_install_message() -> str:
-    return "claude is not on PATH. Install Claude Code, then run `claude auth login`."
+    return (
+        "Claude is not on PATH. If you use Claude, install Claude Code, then run "
+        "`claude auth login`. Otherwise, you can ignore this message if you only use Codex or "
+        "other agents."
+    )
 
 
 def _has_yaml_frontmatter(path: Path) -> bool:

@@ -64,8 +64,8 @@ def cmd_up(args: argparse.Namespace) -> int:
         skip_repos=args.skip_repos,
         check=args.check,
     )
-    print(f"scix up completed with {len(changes)} changed paths")
-    print("Next steps:")
+    print(f"\n scix up completed with {len(changes)} changed paths")
+    print("\n\nNext steps:")
     for note in up_guidance(root):
         print(f"- {note}")
     return 0

@@ -40,8 +40,8 @@ def main(argv: list[str] | None = None) -> int:
         print(str(exc))
         return 1
 
-    print(f"scix developer bootstrap completed with {len(changes)} changed paths")
-    print("Next steps:")
+    print(f"\nscix developer bootstrap completed with {len(changes)} changed paths")
+    print("\n\nNext steps:")
     for note in dev_up_guidance(Path.cwd()):
         print(f"- {note}")
     return 0
