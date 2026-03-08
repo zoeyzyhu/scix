@@ -188,8 +188,6 @@ def test_dev_setup_and_bootstrap_import_without_yaml_on_sys_path() -> None:
     assert result.returncode == 0, result.stderr
 
 
-
-
 def test_dev_setup_reports_missing_pyyaml_dependency() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     code = (
@@ -209,6 +207,8 @@ def test_dev_setup_reports_missing_pyyaml_dependency() -> None:
     assert result.returncode == 1
     assert "Missing dependency 'PyYAML'" in result.stdout
     assert "ModuleNotFoundError" not in result.stdout
+
+
 def test_runtime_bootstrap_sources_do_not_reference_pyenv_or_sudo() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     for relative_path in [
