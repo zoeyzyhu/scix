@@ -18,7 +18,6 @@ from .constants import (
     TRIVIAL_HIDDEN_NAMES,
 )
 from .exceptions import ScixError
-from .generator import find_workspace_root, load_yaml, sync_workspace
 from .scaffold import copy_template_paths, copy_template_root
 
 DEVELOPER_TEMPLATE_PATHS = [
@@ -74,9 +73,37 @@ def perform_dev_up(
     )
 
 
+def bootstrap_dev_python(target_root: Path) -> None:
+    """Create ``xenv/`` and install contributor dependencies without requiring PyYAML."""
+
+    target_root = target_root.resolve()
+    _ensure_developer_checkout(target_root)
+    copy_template_paths(target_root, DEVELOPER_TEMPLATE_PATHS)
+    ensure_python_bootstrap(target_root)
+    install_scix_into_xenv(
+        target_root,
+        package_root=target_root,
+        editable=True,
+        include_dev=True,
+    )
+    _run_in_xenv(
+        target_root,
+        [
+            "-c",
+            (
+                "from pathlib import Path; "
+                "from scix.bootstrap import install_pre_commit_hooks, install_science_packages; "
+                "root = Path.cwd(); "
+                "install_science_packages(root); "
+                "install_pre_commit_hooks(root)"
+            ),
+        ],
+    )
+
+
 def install_missing_repos(root: Path | None = None) -> list[Path]:
-    root = find_workspace_root(root)
-    repo_map = load_yaml(root / "ai/policy/repos.yaml")
+    root = _find_workspace_root(root)
+    repo_map = _load_yaml(root / "ai/policy/repos.yaml")
     cloned: list[Path] = []
     for repo_name, spec in sorted((repo_map.get("repos") or {}).items()):
         target = root / (spec.get("path") or f"repos/{repo_name}")
@@ -89,7 +116,7 @@ def install_missing_repos(root: Path | None = None) -> list[Path]:
 
 
 def doctor(root: Path | None = None) -> list[str]:
-    root = find_workspace_root(root)
+    root = _find_workspace_root(root)
     issues: list[str] = []
     if not (root / ROOT_MARKER).exists():
         issues.append(f"Missing {ROOT_MARKER} in {root}")
@@ -107,7 +134,7 @@ def doctor(root: Path | None = None) -> list[str]:
         issues.append(_codex_install_message())
     if shutil.which("claude") is None:
         issues.append(_claude_install_message())
-    repo_map = load_yaml(root / "ai/policy/repos.yaml")
+    repo_map = _load_yaml(root / "ai/policy/repos.yaml")
     for repo_name, spec in sorted((repo_map.get("repos") or {}).items()):
         repo_path = root / (spec.get("path") or f"repos/{repo_name}")
         if not repo_path.exists():
@@ -116,7 +143,7 @@ def doctor(root: Path | None = None) -> list[str]:
 
 
 def up_guidance(root: Path | None = None) -> list[str]:
-    root = find_workspace_root(root)
+    root = _find_workspace_root(root)
     notes: list[str] = []
     if (root / "xenv").exists():
         notes.append("Activate the workspace Python with: source xenv/bin/activate")
@@ -144,7 +171,7 @@ def up_guidance(root: Path | None = None) -> list[str]:
 
 
 def dev_up_guidance(root: Path | None = None) -> list[str]:
-    root = find_workspace_root(root)
+    root = _find_workspace_root(root)
     notes: list[str] = []
     if (root / "xenv").exists():
         notes.append("Activate the workspace Python with: source xenv/bin/activate")
@@ -227,7 +254,7 @@ def install_scix_into_xenv(
 
 def install_science_packages(root: Path) -> None:
     pip = root / "xenv/bin/pip"
-    repo_map = load_yaml(root / "ai/policy/repos.yaml")
+    repo_map = _load_yaml(root / "ai/policy/repos.yaml")
     packages = [
         spec["pip_package"]
         for spec in (repo_map.get("repos") or {}).values()
@@ -425,7 +452,7 @@ def _finalize_workspace(
     install_dev_package: bool = False,
     install_hooks: bool = False,
 ) -> list[str]:
-    changed = [str(path) for path in sync_workspace(root)]
+    changed = [str(path) for path in _sync_workspace(root)]
     if not skip_python:
         ensure_python_bootstrap(root)
         if install_dev_package:
@@ -442,12 +469,39 @@ def _finalize_workspace(
             install_pre_commit_hooks(root)
     if not skip_repos:
         install_missing_repos(root)
-        changed.extend(str(path) for path in sync_workspace(root))
+        changed.extend(str(path) for path in _sync_workspace(root))
     if check:
         issues = doctor(root)
         if issues:
             raise ScixError("\n".join(issues))
     return changed
+
+
+def _find_workspace_root(start: Path | None = None) -> Path:
+    current = (start or Path.cwd()).resolve()
+    for candidate in (current, *current.parents):
+        if (candidate / ROOT_MARKER).exists():
+            return candidate
+    raise ScixError(f"Could not find {ROOT_MARKER} from {current}")
+
+
+def _load_yaml(path: Path) -> dict:
+    from .generator import load_yaml
+
+    return load_yaml(path)
+
+
+def _sync_workspace(root: Path, check: bool = False) -> list[Path]:
+    from .generator import sync_workspace
+
+    return sync_workspace(root, check=check)
+
+
+def _run_in_xenv(root: Path, args: list[str]) -> None:
+    python = root / "xenv/bin/python"
+    if not python.exists():
+        raise ScixError(f"Missing xenv Python at {python}")
+    _run([str(python), *args], cwd=root)
 
 
 def _codex_install_message() -> str:

@@ -269,6 +269,17 @@ creates `xenv/`, installs `scix` in editable mode with developer dependencies,
 installs the science packages, clones missing reference repos, installs Git
 hooks, and regenerates the generated Codex and Claude files.
 
+It also handles a fresh-clone case where the system Python does not have
+project dependencies such as `PyYAML`. In that situation, `./scripts/dev-up.sh`
+bootstraps `xenv/` first and then re-enters the normal contributor flow from
+inside `xenv/`.
+
+Before you change shared agent behavior, read
+[`docs/AI_FOLDER_GUIDE.md`](/Users/zoey/Documents/Playground/docs/AI_FOLDER_GUIDE.md).
+That guide explains what the repo-root `ai/` folder controls, how it maps to
+generated agent files, which files are safe to edit, and the main reliability
+and safety risks.
+
 After that, activate the environment:
 
 ```bash
@@ -281,6 +292,9 @@ If you want to install the Git hooks yourself again later, run:
 xenv/bin/pre-commit install
 ```
 
+`--skip-python` is intended for later reruns after `xenv/` already exists. Do
+not use it for the first contributor bootstrap on a fresh clone.
+
 To run all contributor checks locally:
 
 ```bash
@@ -289,6 +303,18 @@ pytest
 python -m build
 scix sync --check
 ```
+
+When you change the AI canon, keep these rules in mind:
+
+- edit the repo-root `ai/` files, not generated files under `.codex/`,
+  `.claude/`, `.agents/`, or repo overlays
+- run `scix sync` after each logical change; in the source repo it also refreshes
+  `src/scix/assets/template_root/ai/` for packaged installs
+- inspect both the generated agent diff and the packaged template diff before
+  you commit
+- keep hooks portable and auditable, and never place secrets in prompt files or
+  scripts
+- prefer narrow prompt and routing changes over large rewrites
 
 The contributor path is separate on purpose:
 

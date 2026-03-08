@@ -37,7 +37,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     up_parser.set_defaults(func=cmd_up)
 
-    sync_parser = subparsers.add_parser("sync", help="Regenerate Codex and Claude files")
+    sync_parser = subparsers.add_parser(
+        "sync",
+        help="Regenerate agent files and refresh the packaged AI template when present",
+    )
     sync_parser.add_argument(
         "--check",
         action="store_true",
