@@ -106,14 +106,3 @@ jobs:
               }
               await github.rest.repos.createRelease(payload);
             }
-
-      - name: Comment on merged PR
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `Published scix v${{ steps.bump_version.outputs.new_version }} to PyPI.`
-            })
