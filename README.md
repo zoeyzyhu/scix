@@ -283,10 +283,10 @@ source xenv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e .[dev]
 python -m pip install pydisort pyharp kintera snapy paddle
-./scripts/dev-up.sh
+scix dev
 ```
 
-`./scripts/dev-up.sh` is the contributor bootstrap for a cloned source repo. It
+`scix dev` is the contributor bootstrap for a cloned source repo. It
 keeps the existing source files in place, creates any missing workspace files,
 optionally clones missing reference repos, and regenerates the generated Codex
 and Claude files. It does not create `xenv/` or install packages for you.
@@ -330,4 +330,4 @@ The contributor path is separate on purpose:
 - end users should still create a fresh folder, create `xenv/`, install
   packages, and run `scix up`
 - contributors should clone the repo, create `xenv/`, install `.[dev]`, and run
-  `./scripts/dev-up.sh`
+  `scix dev`

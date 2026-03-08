@@ -169,6 +169,36 @@ def test_perform_dev_up_backfills_workspace_without_overwriting_canonical_files(
     assert (tmp_path / ".claude/settings.json").exists()
 
 
+def test_scix_dev_command_bootstraps_contributor_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from scix.cli import main
+
+    copy_template_paths(tmp_path, ["ai"])
+    (tmp_path / "src/scix").mkdir(parents=True)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "docs").mkdir()
+    (tmp_path / ".github/workflows").mkdir(parents=True)
+    (tmp_path / "pyproject.toml").write_text("[project]\nname = 'scix'\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text("custom contributor README\n", encoding="utf-8")
+    (tmp_path / "ai/policy/workspace.md").write_text("custom workspace policy\n", encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)
+
+    result = main(["dev", "--skip-repos"])
+
+    assert result == 0
+    assert (tmp_path / "README.md").read_text(encoding="utf-8") == "custom contributor README\n"
+    assert (tmp_path / "ai/policy/workspace.md").read_text(
+        encoding="utf-8"
+    ) == "custom workspace policy\n"
+    assert (tmp_path / ".ai-root").exists()
+    assert (tmp_path / "repos/README.md").exists()
+    assert (tmp_path / "workspace/README.md").exists()
+    assert (tmp_path / ".codex/config.toml").exists()
+    assert (tmp_path / ".claude/settings.json").exists()
+
+
 def test_dev_setup_and_bootstrap_import_without_yaml_on_sys_path() -> None:
     repo_root = Path(__file__).resolve().parents[1]
     code = (
@@ -186,6 +216,27 @@ def test_dev_setup_and_bootstrap_import_without_yaml_on_sys_path() -> None:
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_dev_setup_reports_missing_pyyaml_dependency() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    code = (
+        "import os; import sys; "
+        f"sys.path.insert(0, {str(repo_root / 'src').__repr__()}); "
+        f"os.chdir({str(repo_root).__repr__()}); "
+        "from scix.dev_setup import main; raise SystemExit(main(['--skip-repos']))"
+    )
+    result = subprocess.run(
+        [sys.executable, "-S", "-c", code],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "Missing dependency 'PyYAML'" in result.stdout
+    assert "ModuleNotFoundError" not in result.stdout
 
 
 def test_runtime_bootstrap_sources_do_not_reference_pyenv_or_sudo() -> None:
