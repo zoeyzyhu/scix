@@ -21,4 +21,6 @@ This file is generated for Codex.
 ## Guardrails
 - Modify this repo only when it is the primary repo for the task.
 - Read neighboring tests and examples before making changes.
+- For behavior changes, add or update tests when feasible, run the relevant validation command, and explain if no automated test was possible.
+- Summaries must include the exact validation command and result.
 - Report cross-repo compatibility risks in your summary.

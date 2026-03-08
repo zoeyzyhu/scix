@@ -11,9 +11,15 @@ cross-repo compatibility risks before making changes.
 ## Hard Rules
 - Modify only the primary repo unless the task explicitly requires coordinated edits.
 - Read tests, examples, and neighboring code before implementation.
+- Implementation work follows `implementer -> tester -> reviewer`.
+- Add or update tests when a change affects behavior and automated coverage is feasible.
+- Run the relevant test or validation command before finalizing.
+- If tests fail, fix the issue and rerun before finalizing.
+- If no automated test is feasible, say why and run the closest available validation step.
 - Do not duplicate source-of-truth logic across repos.
 - Use `paddle` for examples, tutorials, and high-level API patterns.
 - Summaries must mention which reference repos were consulted.
+- Summaries for implementation work must include the exact validation command and result.
 
 ## Repo Routing
 - `kintera` at `repos/kintera` owns: thermodynamics, eos, chemistry, thermal_state
@@ -42,7 +48,9 @@ cross-repo compatibility risks before making changes.
 - `pytest`: preferred default test entry point when a repo already uses pytest.
 - `python -m pip install -e .`: preferred editable install pattern for local Python repos.
 - `python -m build`: package build check for `scix`.
+- `xenv/bin/pre-commit run --all-files`: preferred contributor-wide check for `scix`.
 - When a repo has its own documented commands, prefer that repo's README or test config.
+- For implementation work, record the exact test or validation command that was run.
 
 ## Shared Skills
 - `cross-repo-read`

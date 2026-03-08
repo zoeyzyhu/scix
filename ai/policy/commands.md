@@ -1,4 +1,6 @@
 - `pytest`: preferred default test entry point when a repo already uses pytest.
 - `python -m pip install -e .`: preferred editable install pattern for local Python repos.
 - `python -m build`: package build check for `scix`.
+- `xenv/bin/pre-commit run --all-files`: preferred contributor-wide check for `scix`.
 - When a repo has its own documented commands, prefer that repo's README or test config.
+- For implementation work, record the exact test or validation command that was run.

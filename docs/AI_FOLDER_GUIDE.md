@@ -36,6 +36,8 @@ The main layers are:
 - `ai/agents/roles.yaml`
   - Canonical role definitions.
   - These generate `.codex/agents/*.toml` and `.claude/agents/*.md`.
+  - This includes the `implementer`, `tester`, and `reviewer` collaboration flow
+    for implementation work.
 - `ai/skills/*/SKILL.md`
   - Reusable local instructions for focused workflows.
   - These are mirrored into `.agents/skills/` and `.claude/skills/`.
@@ -103,6 +105,12 @@ scix sync --check
 
 6. Sanity-check the actual agent behavior if the change is behavioral, not just
    structural.
+
+Implementation changes should also preserve the expected agent handoff:
+
+- `implementer` makes the change
+- `tester` adds or updates tests when feasible and runs the relevant command
+- `reviewer` checks correctness, regression risk, and whether testing evidence is present
 
 ## What not to edit directly
 
