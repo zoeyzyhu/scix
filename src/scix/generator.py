@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import yaml
@@ -11,6 +12,9 @@ from .constants import REQUIRED_ROOT_PATHS, ROOT_MARKER
 from .exceptions import CheckFailedError, ScixError
 
 AUTO_GEN_HEADER = "<!-- AUTO-GENERATED FILE. EDIT ai/policy/* OR ai/agents/roles.yaml INSTEAD. -->"
+EDITABLE_AI_DIRS = ("agents", "hooks", "policy", "skills")
+PACKAGED_TEMPLATE_AI = Path("src/scix/assets/template_root/ai")
+PACKAGED_GENERATED_PLACEHOLDER = Path("generated/repos/.gitkeep")
 
 
 def find_workspace_root(start: Path | None = None) -> Path:
@@ -44,6 +48,9 @@ def sync_workspace(root: Path | None = None, check: bool = False) -> list[Path]:
     root = find_workspace_root(root)
     ensure_workspace_shape(root)
 
+    changed: list[Path] = []
+    _sync_packaged_template_ai(root, changed, check)
+
     repo_map = load_yaml(root / "ai/policy/repos.yaml")
     roles = load_yaml(root / "ai/agents/roles.yaml").get("roles", {})
     workspace_md = read_text(root / "ai/policy/workspace.md")
@@ -52,7 +59,6 @@ def sync_workspace(root: Path | None = None, check: bool = False) -> list[Path]:
     skills_dir = root / "ai/skills"
     skills = sorted(path.name for path in skills_dir.iterdir() if path.is_dir())
 
-    changed: list[Path] = []
     _write_or_check(
         root / "AGENTS.md",
         render_workspace_doc(
@@ -119,6 +125,59 @@ def sync_workspace(root: Path | None = None, check: bool = False) -> list[Path]:
             _write_or_check(repo_root / "CLAUDE.md", claude_text, changed, check)
 
     return changed
+
+
+def _sync_packaged_template_ai(root: Path, changed: list[Path], check: bool) -> None:
+    template_ai = root / PACKAGED_TEMPLATE_AI
+    if not template_ai.exists():
+        return
+
+    for directory_name in EDITABLE_AI_DIRS:
+        _sync_text_tree(
+            root / "ai" / directory_name,
+            template_ai / directory_name,
+            changed,
+            check,
+        )
+
+    generated_dir = template_ai / "generated/repos"
+    _write_or_check(generated_dir / ".gitkeep", "", changed, check)
+    for extra_path in sorted(path for path in generated_dir.rglob("*") if path.is_file()):
+        if extra_path.relative_to(generated_dir) == Path(".gitkeep"):
+            continue
+        _remove_or_check(extra_path, changed, check)
+    _prune_empty_dirs(generated_dir)
+
+
+def _sync_text_tree(source_dir: Path, target_dir: Path, changed: list[Path], check: bool) -> None:
+    source_files = sorted(path for path in source_dir.rglob("*") if path.is_file())
+    target_files = {
+        path.relative_to(target_dir): path for path in target_dir.rglob("*") if path.is_file()
+    }
+
+    for source_path in source_files:
+        relative_path = source_path.relative_to(source_dir)
+        _write_or_check(
+            target_dir / relative_path,
+            source_path.read_text(encoding="utf-8"),
+            changed,
+            check,
+        )
+        target_files.pop(relative_path, None)
+
+    for extra_path in sorted(target_files.values()):
+        _remove_or_check(extra_path, changed, check)
+    _prune_empty_dirs(target_dir)
+
+
+def _remove_or_check(path: Path, changed: list[Path], check: bool) -> None:
+    if check:
+        raise CheckFailedError(f"Generated file is stale: {path}")
+    if path.is_dir():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+    changed.append(path)
 
 
 def render_workspace_doc(
@@ -258,6 +317,16 @@ def render_claude_agent(role_name: str, spec: dict) -> str:
     description = spec.get("purpose", "")
     prompt = (spec.get("prompt") or "").strip()
     return f"---\nname: {role_name}\ndescription: {description}\ntools: {tools}\n---\n\n{prompt}\n"
+
+
+def _prune_empty_dirs(root: Path) -> None:
+    directories = sorted(
+        (candidate for candidate in root.rglob("*") if candidate.is_dir()),
+        reverse=True,
+    )
+    for path in directories:
+        if not any(path.iterdir()):
+            path.rmdir()
 
 
 def _write_or_check(path: Path, content: str, changed: list[Path], check: bool) -> None:

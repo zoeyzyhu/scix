@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -6,6 +8,49 @@ from scix.bootstrap import doctor, perform_dev_up, perform_up
 from scix.exceptions import CheckFailedError, ScixError
 from scix.generator import sync_workspace
 from scix.scaffold import copy_template_paths, copy_template_root
+
+
+def test_root_ai_tree_matches_packaged_template_ai() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    source_ai = repo_root / "ai"
+    template_ai = repo_root / "src/scix/assets/template_root/ai"
+    mirrored_roots = ["agents", "hooks", "policy", "skills"]
+
+    source_files = sorted(
+        path.relative_to(source_ai)
+        for root_name in mirrored_roots
+        for path in (source_ai / root_name).rglob("*")
+        if path.is_file()
+    )
+    template_files = sorted(
+        path.relative_to(template_ai)
+        for root_name in mirrored_roots
+        for path in (template_ai / root_name).rglob("*")
+        if path.is_file()
+    )
+
+    assert source_files == template_files
+    for relative_path in source_files:
+        assert (source_ai / relative_path).read_text(encoding="utf-8") == (
+            template_ai / relative_path
+        ).read_text(encoding="utf-8")
+    assert (template_ai / "generated/repos/.gitkeep").exists()
+
+
+def test_sync_workspace_updates_packaged_template_ai_in_source_checkout(tmp_path: Path) -> None:
+    copy_template_root(tmp_path)
+    copy_template_paths(tmp_path / "src/scix/assets/template_root", ["ai"])
+    source_file = tmp_path / "ai/policy/workspace.md"
+    template_file = tmp_path / "src/scix/assets/template_root/ai/policy/workspace.md"
+    source_file.write_text("updated workspace policy\n", encoding="utf-8")
+
+    with pytest.raises(CheckFailedError):
+        sync_workspace(tmp_path, check=True)
+
+    changed = sync_workspace(tmp_path)
+
+    assert template_file.read_text(encoding="utf-8") == "updated workspace policy\n"
+    assert template_file in changed
 
 
 def test_sync_workspace_generates_expected_files(tmp_path: Path) -> None:
@@ -104,3 +149,22 @@ def test_perform_dev_up_backfills_workspace_without_overwriting_canonical_files(
     assert (tmp_path / "workspace/README.md").exists()
     assert (tmp_path / ".codex/config.toml").exists()
     assert (tmp_path / ".claude/settings.json").exists()
+
+
+def test_dev_setup_and_bootstrap_import_without_yaml_on_sys_path() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    code = (
+        "import sys; "
+        f"sys.path.insert(0, {str(repo_root / 'src').__repr__()}); "
+        "import scix.bootstrap; "
+        "import scix.dev_setup"
+    )
+    result = subprocess.run(
+        [sys.executable, "-S", "-c", code],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
