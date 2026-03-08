@@ -463,15 +463,33 @@ def _find_workspace_root(start: Path | None = None) -> Path:
 
 
 def _load_yaml(path: Path) -> dict:
-    from .generator import load_yaml
+    try:
+        from .generator import load_yaml
+    except ModuleNotFoundError as exc:
+        raise _dependency_error(exc) from exc
 
     return load_yaml(path)
 
 
 def _sync_workspace(root: Path, check: bool = False) -> list[Path]:
-    from .generator import sync_workspace
+    try:
+        from .generator import sync_workspace
+    except ModuleNotFoundError as exc:
+        raise _dependency_error(exc) from exc
 
     return sync_workspace(root, check=check)
+
+
+def _dependency_error(exc: ModuleNotFoundError) -> ScixError:
+    if exc.name == "yaml":
+        return ScixError(
+            "Missing dependency 'PyYAML'. Activate your virtual environment and run "
+            "`python -m pip install -e .` (or `python -m pip install PyYAML`)."
+        )
+    return ScixError(
+        f"Missing dependency '{exc.name}'. Activate your virtual environment and install "
+        "project dependencies."
+    )
 
 
 def _virtual_env_message() -> str:
