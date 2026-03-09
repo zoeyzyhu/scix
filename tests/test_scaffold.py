@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 import scix.bootstrap as bootstrap
-from scix.bootstrap import doctor, perform_dev_up, perform_up
+from scix.bootstrap import dev_up_guidance, doctor, perform_dev_up, perform_up, up_guidance
 from scix.exceptions import CheckFailedError, ScixError
 from scix.generator import sync_workspace
 from scix.scaffold import copy_template_paths, copy_template_root
@@ -384,6 +384,54 @@ def test_doctor_uses_nvm_based_agent_install_commands(
     assert any("nvm install --lts" in issue for issue in issues)
     assert any("@openai/codex" in issue for issue in issues)
     assert any("@anthropic-ai/claude-code" in issue for issue in issues)
+
+
+def test_doctor_skips_agent_diagnosis_when_one_agent_cli_exists(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    copy_template_root(tmp_path)
+    _create_reference_repo_dirs(tmp_path)
+    real_which = shutil.which
+
+    def fake_which(name: str) -> str | None:
+        if name == "codex":
+            return "/fake/bin/codex"
+        if name == "claude":
+            return None
+        return real_which(name)
+
+    monkeypatch.setattr(bootstrap.shutil, "which", fake_which)
+
+    issues = doctor(tmp_path)
+
+    assert issues == []
+
+
+def test_guidance_skips_agent_warnings_when_one_agent_cli_exists(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    copy_template_root(tmp_path)
+    _create_reference_repo_dirs(tmp_path)
+    real_which = shutil.which
+
+    def fake_which(name: str) -> str | None:
+        if name == "claude":
+            return "/fake/bin/claude"
+        if name == "codex":
+            return None
+        return real_which(name)
+
+    monkeypatch.setattr(bootstrap.shutil, "which", fake_which)
+
+    up_notes = up_guidance(tmp_path)
+    dev_notes = dev_up_guidance(tmp_path)
+
+    assert not any("No agent CLI detected" in note for note in up_notes)
+    assert not any("Neither Codex nor Claude is on PATH" in note for note in up_notes)
+    assert not any("No agent CLI detected" in note for note in dev_notes)
+    assert not any("Neither Codex nor Claude is on PATH" in note for note in dev_notes)
 
 
 def test_perform_dev_up_backfills_workspace_without_overwriting_canonical_files(

@@ -180,18 +180,11 @@ def doctor(
             )
 
     # Check required CLI tools
-    if not suppress_agent_cli_issues and shutil.which("codex") is None:
+    if not suppress_agent_cli_issues and not _has_any_agent_cli():
         issue_lines += issue(
-            "Codex CLI not found",
-            _codex_install_message(),
-            _agent_install_commands(include_codex=True),
-        )
-
-    if not suppress_agent_cli_issues and shutil.which("claude") is None:
-        issue_lines += issue(
-            "Claude CLI not found",
-            _claude_install_message(),
-            _agent_install_commands(include_claude=True),
+            "No agent CLI found",
+            _agent_cli_install_message(),
+            _agent_install_commands(include_codex=True, include_claude=True),
         )
 
     # Check repository clones
@@ -211,33 +204,6 @@ def doctor(
     report.extend(issue_lines)
     report.append(rule)
     return report
-
-
-def doctor0(
-    root: Path | None = None,
-    *,
-    suppress_agent_cli_issues: bool = False,
-) -> list[str]:
-    root = _find_workspace_root(root)
-    issues: list[str] = []
-    if not (root / ROOT_MARKER).exists():
-        issues.append(f"Missing {ROOT_MARKER} in {root}")
-    for skill_path in sorted((root / "ai/skills").glob("*/SKILL.md")):
-        if not _has_yaml_frontmatter(skill_path):
-            issues.append(
-                f"Invalid skill file: {skill_path}. Codex requires YAML frontmatter "
-                "delimited by ---."
-            )
-    if not suppress_agent_cli_issues and shutil.which("codex") is None:
-        issues.append(_codex_install_message())
-    if not suppress_agent_cli_issues and shutil.which("claude") is None:
-        issues.append(_claude_install_message())
-    repo_map = _load_yaml(root / "ai/policy/repos.yaml")
-    for repo_name, spec in sorted((repo_map.get("repos") or {}).items()):
-        repo_path = root / (spec.get("path") or f"repos/{repo_name}")
-        if not repo_path.exists():
-            issues.append(f"Missing repo clone: {repo_path}")
-    return issues
 
 
 def up_guidance(root: Path | None = None) -> list[str]:
@@ -309,13 +275,9 @@ def up_guidance(root: Path | None = None) -> list[str]:
         notes.append(f"{YELLOW}!{RESET} {BOLD}`scix` command not found{RESET}")
         notes += wrap(_virtual_env_message(), indent=3)
 
-    if shutil.which("codex") is None:
-        notes.append(f"{YELLOW}!{RESET} {BOLD}Codex CLI not detected{RESET}")
-        notes += wrap(_codex_install_message(), indent=3)
-
-    if shutil.which("claude") is None:
-        notes.append(f"{YELLOW}!{RESET} {BOLD}Claude CLI not detected{RESET}")
-        notes += wrap(_claude_install_message(), indent=3)
+    if not _has_any_agent_cli():
+        notes.append(f"{YELLOW}!{RESET} {BOLD}No agent CLI detected{RESET}")
+        notes += wrap(_agent_cli_install_message(), indent=3)
 
     if _is_ssh_session():
         notes.append(f"{YELLOW}!{RESET} {BOLD}SSH session detected{RESET}")
@@ -380,25 +342,15 @@ def dev_up_guidance(root: Path | None = None) -> list[str]:
     notes.append("")
 
     notes += step(
-        "1. Prepare Python environment",
-        "Create and activate `xenv` (or your own virtual environment) before installing packages.",
-        [
-            "python3 -m venv xenv",
-            "source xenv/bin/activate",
-        ],
-    )
-
-    notes += step(
-        "2. Install development dependencies",
+        "1. Install development dependencies",
         None,
         [
-            "pip install -e .",
             "pip install pydisort pyharp kintera snapy paddle",
         ],
     )
 
     notes += step(
-        "3. Install pre-commit hooks",
+        "2. Install pre-commit hooks",
         None,
         [
             "pip install pre-commit",
@@ -414,13 +366,9 @@ def dev_up_guidance(root: Path | None = None) -> list[str]:
         notes.append(f"{YELLOW}!{RESET} {BOLD}`scix` command not found{RESET}")
         notes += wrap(_virtual_env_message(), indent=3)
 
-    if shutil.which("codex") is None:
-        notes.append(f"{YELLOW}!{RESET} {BOLD}Codex CLI not detected{RESET}")
-        notes += wrap(_codex_install_message(), indent=3)
-
-    if shutil.which("claude") is None:
-        notes.append(f"{YELLOW}!{RESET} {BOLD}Claude CLI not detected{RESET}")
-        notes += wrap(_claude_install_message(), indent=3)
+    if not _has_any_agent_cli():
+        notes.append(f"{YELLOW}!{RESET} {BOLD}No agent CLI detected{RESET}")
+        notes += wrap(_agent_cli_install_message(), indent=3)
 
     if _is_ssh_session():
         notes.append(f"{YELLOW}!{RESET} {BOLD}SSH session detected{RESET}")
@@ -542,21 +490,14 @@ def _virtual_env_message() -> str:
     )
 
 
-def _codex_install_message() -> str:
+def _agent_cli_install_message() -> str:
     return (
-        "Codex is not on PATH. `scix up` and `scix dev` try to install nvm, user-local "
-        "Node.js/npm, and Codex automatically. If `codex` is still missing, rerun the "
-        "nvm-based install commands below, open a new shell or source `~/.nvm/nvm.sh`, then "
-        "run `codex login`."
-    )
-
-
-def _claude_install_message() -> str:
-    return (
-        "Claude is not on PATH. `scix up` and `scix dev` try to install nvm, user-local "
-        "Node.js/npm, and Claude Code automatically. If `claude` is still missing, rerun the "
-        "nvm-based install commands below, open a new shell or source `~/.nvm/nvm.sh`, then run "
-        "`claude auth login`."
+        "Neither Codex nor Claude is on PATH. `scix up` (if you are a user) and `scix dev` "
+        "(if you are a developer) try to install nvm, "
+        "user-local Node.js/npm, Codex, and Claude automatically. If both commands are still "
+        "missing, rerun the nvm-based install commands below, open a new shell or source "
+        "`~/.nvm/nvm.sh`, then run `codex login` (or `codex login --device-auth` "
+        "if you're in an SSH session) or `claude auth login`."
     )
 
 
@@ -569,6 +510,10 @@ def _has_yaml_frontmatter(path: Path) -> bool:
 
 def _is_ssh_session() -> bool:
     return any(os.environ.get(name) for name in ("SSH_CONNECTION", "SSH_TTY", "SSH_CLIENT"))
+
+
+def _has_any_agent_cli() -> bool:
+    return shutil.which("codex") is not None or shutil.which("claude") is not None
 
 
 def _ensure_agent_clis() -> AgentInstallResult:
