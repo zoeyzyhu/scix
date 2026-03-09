@@ -1,143 +1,128 @@
-# scix
+<h4 align="center">
+  <img src="docs/img/scix_image.png" alt="SciX" width="480" style="display: block; margin: 0 auto">
+</h4>
 
-`scix` creates a science-oriented workspace that works with both Codex CLI and
-Claude Code.
+<p align="center">
+  <i>Planetary atmosphere research, organized for fast science and reliable AI collaboration.</i>
+</p>
 
-## Table of Contents
-- [What scix does](#what-scix-does)
-- [Who this is for](#who-this-is-for)
-- [Before you begin](#before-you-begin)
-- [Quick start](#quick-start)
-- [What `scix up` will do](#what-scix-up-will-do)
-- [Activate the local Python environment](#activate-the-local-python-environment)
-- [Install Codex and Claude CLIs if needed](#install-codex-and-claude-clis-if-needed)
-- [Log into Codex](#log-into-codex)
-- [Log into Claude](#log-into-claude)
-- [Use VS Code](#use-vs-code)
-- [Start Codex or Claude inside VS Code](#start-codex-or-claude-inside-vs-code)
-- [Important folders](#important-folders)
-- [Helpful commands](#helpful-commands)
-- [Developers / Contributors](#developers--contributors)
+<p align="center">
+  <a href="https://github.com/zoeyzyhu/scix/actions/workflows/ci.yml">
+    <img alt="GitHub Workflow Status"
+      src="https://img.shields.io/github/actions/workflow/status/zoeyzyhu/scix/ci.yml?branch=main&style=flat-square&logo=github">
+  </a>
+  <a href="https://github.com/zoeyzyhu/scix/releases">
+    <img alt="GitHub release"
+      src="https://img.shields.io/github/v/release/zoeyzyhu/scix?style=flat-square&logo=github">
+  </a>
+  <a href="https://github.com/zoeyzyhu/scix/issues">
+    <img alt="GitHub issues"
+      src="https://img.shields.io/github/issues/zoeyzyhu/scix?style=flat-square&logo=git">
+  </a>
+  <a href="https://github.com/zoeyzyhu/scix/blob/main/pyproject.toml">
+    <img alt="macOS and Linux"
+      src="https://img.shields.io/badge/OS-macOS%20%7C%20Linux-F28C28?style=flat-square">
+  </a>
+</p>
 
-## What scix does
+<p align="center">
+  <strong>scix</strong> builds a reproducible dual-agent workspace for planetary-atmosphere research, so scientists and developers can focus on science instead of setup, and collaborate with AI agents that understand the shared context and tools of the stack.
+</p>
 
-`scix` sets up:
+<p align="center">
+  <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
+  <a href="#who-this-is-for">Who This Is For</a> &nbsp;&bull;&nbsp;
+  <a href="#quick-start">Quick Start</a> &nbsp;&bull;&nbsp;
+  <a href="#workflow-options">Workflow Options</a> &nbsp;&bull;&nbsp;
+  <a href="#contributing">Contributing</a>
+</p>
 
-- a shared AI policy system for Codex and Claude
-- a `repos/` folder for cloned reference repositories
-- a `workspace/` folder for your own scripts, models, experiments, and notes
-- generated `AGENTS.md`, `CLAUDE.md`, skills, hooks, and tool configs
+<br/>
 
-`scix` does not create Python environments for you. You create `xenv/`
-yourself, activate it, install packages into it, and then run `scix up`.
+## Introduction
 
-## Who this is for
+`scix` is the workspace layer for the planetary-atmosphere modeling stack. It assembles domain libraries into one working environment with shared AI policies and skills, so you have both the tools and the agent context to do your science faster, and collaborate with AI agents more effectively.
 
-This README assumes:
+It is designed to work alongside:
 
-- you are new to AI tools
-- you are new to the Terminal
-- you are new to VS Code
+- [pydisort](https://github.com/zoeyzyhu/pydisort) for DISORT-based radiative transfer workflows
+- [kintera](https://github.com/chengcli/kintera) for thermodynamics, equation of state, and chemistry
+- [pyharp](https://github.com/chengcli/pyharp) for radiation infrastructure and opacity handling
+- [snapy](https://github.com/chengcli/snapy) for atmospheric dynamics and coupled workflow composition
+- [paddle](https://github.com/elijah-mullens/paddle) for higher-level examples, tutorials, and exploratory modeling patterns
 
-## Before you begin
+With `scix`, a fresh workspace gives you:
 
-You need:
+- a `repos/` directory for the reference scientific packages
+- a `workspace/` directory for your own scripts, models, and outputs
+- generated `AGENTS.md`, `CLAUDE.md`, skills, hooks, and editor/tool configs
+- one setup path for both research users (`scix up`) and contributors (`scix dev`)
 
-- a macOS or Linux machine
-- a GitHub account
-- a Python version `>= 3.9`
-- an internet connection if you want `scix up` or `scix dev` to install missing
-  `nvm`, user-local Node.js/npm, Codex CLI, and Claude Code automatically
+You can also turn `/workspace` or any folder in `repos/` into a git managed directory:
+- just `cd` into the folder and run `git init`
+- `scix` will ignore these directories in its own git version control so it does not interfere with `scix`'s workspace management
 
-If you need a newer Python, Python 3.11 is the recommended version.
+## Requirements
 
-If you are using macOS and have never opened the Terminal:
+- macOS or Linux
+- Python `>= 3.9`
 
-1. Press `Command + Space`.
-2. Type `Terminal`.
-3. Press `Return`.
+## Quick Start
 
-## Quick start
-
-This quick start is for a brand new working folder. If you cloned the `scix`
-source repository, skip to [Developers / Contributors](#developers--contributors)
-instead.
-
-Create a brand new empty folder, then move into it:
+For a new research workspace:
 
 ```bash
 mkdir my-scix-work
 cd my-scix-work
-```
-
-Check your Python version:
-
-```bash
-python3 --version
-```
-
-Create and activate `xenv/`:
-
-```bash
 python3 -m venv xenv
 source xenv/bin/activate
-```
-
-Upgrade pip and install `scix` plus the reference packages:
-
-```bash
-python -m pip install --upgrade pip
-python -m pip install scix
-python -m pip install pydisort pyharp kintera snapy paddle
-```
-
-Run the workspace setup command:
-
-```bash
+pip install --upgrade pip
+pip install scix
 scix up
 ```
 
-`scix` will ask you to confirm that:
-
-- the current directory should become your `scix` workspace
-- this directory is where you want to do your `scix` work
-
-If the folder is not empty, `scix up` stops by default. A pre-existing `xenv/`
-directory is fine.
-
-If the short `scix` command does not work in this shell, make sure `xenv/` is
-activated and run:
+If the short `scix` command is not on `PATH` in the current shell yet, run:
 
 ```bash
 python -m scix up
 ```
 
-## What `scix up` will do
+Installing `scix` now pulls in `pydisort`, `pyharp`, `kintera`, `snapy`, and
+`paddle` automatically.
 
-It will:
+For contributor setup, see the [Contributing](#contributing) section below.
 
-1. create the `scix` workspace files
-2. clone the five reference repositories into `repos/`
-3. generate Codex and Claude config files
-4. install missing `nvm`, user-local Node.js/npm, Codex CLI, and Claude Code
+`scix up` will:
 
-## Activate the local Python environment
+1. create the workspace files and folders
+2. clone the reference repositories into `repos/`
+3. generate Codex and Claude config, policy, and skills
+4. try to install missing `nvm`, user-local Node.js/npm, Codex CLI, and Claude
+   Code
 
-Whenever you return to this workspace, activate the environment again:
+The commands you will use most often are:
+
+| Command | Use it when |
+| --- | --- |
+| `scix --help` | You want to see the list of available commands and options. |
+| `scix up` | You are creating or refreshing a research workspace in the current directory. |
+| `scix doctor` | You want a quick health check on the current workspace. |
+| `scix sync` | You changed the AI canon and need to regenerate Codex/Claude outputs. |
+| `scix install-repos` | One or more reference repositories are missing and need to be cloned again. |
+| `scix dev` | You are working on the `scix` source repository itself. |
+
+Whenever you return to the workspace, reactivate the local environment:
 
 ```bash
 source xenv/bin/activate
 ```
 
-When it is active, Python and pip commands use the local environment inside
-this workspace.
-
-## Install Codex and Claude CLIs if needed
+## Agent CLI Setup
 
 `scix up` and `scix dev` try to install missing `nvm`, user-local Node.js/npm,
 Codex CLI, and Claude Code automatically.
 
-If that automatic step fails, run this exact fallback sequence yourself:
+If that automatic step fails, run this fallback sequence exactly:
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
@@ -150,172 +135,136 @@ npm install -g @openai/codex
 npm install -g @anthropic-ai/claude-code
 ```
 
-If `codex` or `claude` is still missing afterwards, open a new shell or run:
+If `codex` or `claude` is still unavailable, start a new shell or load `nvm`
+manually:
 
 ```bash
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 ```
 
-Alternative installation details are documented in the official Codex CLI and
-Claude Code guides:
+Official references:
 
-- https://developers.openai.com/codex/cli/
-- https://code.claude.com/docs/en/quickstart
+- [Codex CLI](https://developers.openai.com/codex/cli/)
+- [Claude Code quickstart](https://code.claude.com/docs/en/quickstart)
 
-## Log into Codex
-
-Once `codex` is installed, open a Terminal in your `scix` workspace and run:
+### Authenticate Codex
 
 ```bash
 codex login
 ```
 
-If you are using an API key instead of the normal login flow:
+Alternative auth flows:
 
 ```bash
 printenv OPENAI_API_KEY | codex login --with-api-key
-```
-
-If you are in an SSH terminal, first enable device code authorization in
-ChatGPT Security Settings. Then use:
-
-```bash
 codex login --device-auth
 ```
 
-Some Codex CLI versions use a flag-style login command instead of the
-subcommand form. If `codex login` is rejected on your installed version, check
-`codex --help` and use the login form shown there.
+If your installed Codex CLI uses a different login syntax, check:
 
-## Log into Claude
+```bash
+codex --help
+```
 
-Once `claude` is installed, open a Terminal in your `scix` workspace and run:
+### Authenticate Claude
 
 ```bash
 claude auth login
 ```
 
-If you use a long-lived token flow:
+If you use a token-based flow:
 
 ```bash
 claude setup-token
 ```
 
-## If you use VS Code
+## Workflow Options
 
-If Visual Studio Code is installed, open it and choose:
+### Terminal Workflow
 
-1. `File`
-2. `Open Folder...`
-3. Select your `scix` workspace folder
-
-Then open the built-in terminal in VS Code:
-
-1. `Terminal`
-2. `New Terminal`
-
-Activate `xenv` there too:
+From the workspace root:
 
 ```bash
 source xenv/bin/activate
-```
-
-If the `code` command does not work in the Terminal, open VS Code and run:
-
-1. `Command Palette`
-2. Type `Shell Command: Install 'code' command in PATH`
-3. Press `Return`
-
-After that, you can open the current folder from Terminal with:
-
-```bash
-code .
-```
-
-From the VS Code terminal:
-
-```bash
 codex
 ```
 
 or:
 
 ```bash
+source xenv/bin/activate
 claude
 ```
 
-If you prefer to work from the editor UI instead of the terminal, you can also
-install these VS Code extensions and use them from the Extensions view or
-editor sidebar:
+### VS Code Workflow
+
+If you prefer editor-integrated work, open the workspace folder in Visual Studio
+Code and use the built-in terminal:
+
+```bash
+source xenv/bin/activate
+codex
+```
+
+or:
+
+```bash
+source xenv/bin/activate
+claude
+```
+
+If the `code` shell command is not available yet, install it from the VS Code
+Command Palette with `Shell Command: Install 'code' command in PATH`.
+
+Optional editor extensions:
 
 - `Claude Code for VS Code` by Anthropic
 - `Codex - OpenAI's coding agent` by OpenAI
 
+## Workspace Layout
 
-## Important folders
-
-- `repos/`: cloned reference repos such as `kintera` and `pydisort`
-- `workspace/`: your own experiments, notes, notebooks, and rough work
+- `repos/`: cloned reference repositories such as `pydisort`, `kintera`,
+  `pyharp`, `snapy`, and `paddle`
+- `workspace/`: your own analyses, experiments, prototypes, and notes
 - `xenv/`: your manually created local Python environment
-- `ai/`: the shared rules and templates that generate Codex and Claude files
+- `ai/`: the shared AI canon that generates Codex and Claude files
 
-## Helpful commands
+## Contributing
 
-Regenerate all Codex and Claude files:
-
-```bash
-scix sync
-```
-
-Check whether the workspace is healthy:
-
-```bash
-scix doctor
-```
-
-Clone any missing reference repositories again:
-
-```bash
-scix install-repos
-```
-
-## Developers / Contributors
-
-If you want to work on `scix` itself, do not start from `pip install scix`.
-Clone the source repository instead:
+If you are developing `scix` itself, clone the source repository instead of
+starting from `pip install scix`:
 
 ```bash
 git clone https://github.com/zoeyzyhu/scix.git
 cd scix
-python3 --version
 python3 -m venv xenv
 source xenv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e .[dev]
-python -m pip install pydisort pyharp kintera snapy paddle
+pip install --upgrade pip
+pip install -e .[dev]
 scix dev
 ```
 
-`scix dev` is the contributor bootstrap for a cloned source repo. It
-keeps the existing source files in place, creates any missing workspace files,
-optionally clones missing reference repos, and regenerates the generated Codex
-and Claude files. It does not create `xenv/` or install Python packages for
-you, but it does try to install missing `nvm`, user-local Node.js/npm, Codex
-CLI, and Claude Code automatically.
+The editable install also pulls in the core planetary-science stack, so
+contributors do not need a separate manual install step for those packages.
 
-Before you change shared agent behavior, read
+`scix dev` bootstraps a contributor checkout in place. It keeps the existing
+source tree, creates any missing workspace files, optionally clones missing
+reference repositories, regenerates generated Codex and Claude files, and tries
+to install missing agent CLIs if needed.
+
+Before changing shared agent behavior, read
 [`docs/AI_FOLDER_GUIDE.md`](docs/AI_FOLDER_GUIDE.md). That guide explains what
-the repo-root `ai/` folder controls, how it maps to generated agent files,
-which files are safe to edit, and the main reliability and safety risks.
+the repo-root `ai/` folder controls, how it maps to generated agent files, and
+which files are safe to edit.
 
-Install Git hooks with:
+Install contributor hooks with:
 
 ```bash
 xenv/bin/pre-commit install
 ```
 
-To run all contributor checks locally:
+Run the main contributor checks with:
 
 ```bash
 xenv/bin/pre-commit run --all-files
@@ -324,23 +273,13 @@ python -m build
 scix sync --check
 ```
 
-When you change the AI canon, keep these rules in mind:
+When you change the AI canon:
 
 - edit the repo-root `ai/` files, not generated files under `.codex/`,
   `.claude/`, `.agents/`, or repo overlays
-- run `scix sync` after each logical change; in the source repo it also refreshes
-  `src/scix/assets/template_root/ai/` for packaged installs
-- inspect both the generated agent diff and the packaged template diff before
-  you commit
-- implementation work now follows an explicit implementer -> tester -> reviewer
-  workflow
-- keep hooks portable and auditable, and never place secrets in prompt files or
+- run `scix sync` after each logical change so generated files and the packaged
+  template stay aligned
+- inspect both the generated agent diff and the template diff before you commit
+- keep hooks portable and auditable, and never place secrets in prompts or
   scripts
-- prefer narrow prompt and routing changes over large rewrites
-
-The contributor path is separate on purpose:
-
-- end users should still create a fresh folder, create `xenv/`, install
-  packages, and run `scix up`
-- contributors should clone the repo, create `xenv/`, install `.[dev]`, and run
-  `scix dev`
+- follow the `implementer -> tester -> reviewer` workflow
