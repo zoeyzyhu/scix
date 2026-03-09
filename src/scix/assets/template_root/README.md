@@ -10,7 +10,7 @@ Claude Code.
 - [Quick start](#quick-start)
 - [What `scix up` will do](#what-scix-up-will-do)
 - [Activate the local Python environment](#activate-the-local-python-environment)
-- [Install Codex CLI if needed](#install-codex-cli-if-needed)
+- [Install Codex and Claude CLIs if needed](#install-codex-and-claude-clis-if-needed)
 - [Log into Codex](#log-into-codex)
 - [Log into Claude](#log-into-claude)
 - [Use VS Code](#use-vs-code)
@@ -46,8 +46,8 @@ You need:
 - a macOS or Linux machine
 - a GitHub account
 - a Python version `>= 3.9`
-- Codex CLI installed if you want to use Codex
-- Claude Code installed if you want to use Claude
+- an internet connection if you want `scix up` or `scix dev` to install missing
+  `nvm`, user-local Node.js/npm, Codex CLI, and Claude Code automatically
 
 If you need a newer Python, Python 3.11 is the recommended version.
 
@@ -119,6 +119,7 @@ It will:
 1. create the `scix` workspace files
 2. clone the five reference repositories into `repos/`
 3. generate Codex and Claude config files
+4. install missing `nvm`, user-local Node.js/npm, Codex CLI, and Claude Code
 
 ## Activate the local Python environment
 
@@ -131,21 +132,40 @@ source xenv/bin/activate
 When it is active, Python and pip commands use the local environment inside
 this workspace.
 
-## If you use Codex
+## Install Codex and Claude CLIs if needed
 
-If `codex` is missing on Ubuntu or Debian, install it with:
+`scix up` and `scix dev` try to install missing `nvm`, user-local Node.js/npm,
+Codex CLI, and Claude Code automatically.
+
+If that automatic step fails, run this exact fallback sequence yourself:
 
 ```bash
-sudo apt install npm
-sudo npm install -g @openai/codex
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install --lts
+nvm use --lts
+nvm alias default lts/*
+npm install -g @openai/codex
+npm install -g @anthropic-ai/claude-code
 ```
 
-`sudo` means the command uses administrator permission. Your machine may ask for
-your password.
+If `codex` or `claude` is still missing afterwards, open a new shell or run:
 
-Alternatively, you can follow the instructions from the Codex CLI setup guide: https://developers.openai.com/codex/cli/
+```bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+```
 
-Once installed, open a Terminal in your `scix` workspace and run:
+Alternative installation details are documented in the official Codex CLI and
+Claude Code guides:
+
+- https://developers.openai.com/codex/cli/
+- https://code.claude.com/docs/en/quickstart
+
+## Log into Codex
+
+Once `codex` is installed, open a Terminal in your `scix` workspace and run:
 
 ```bash
 codex login
@@ -168,18 +188,9 @@ Some Codex CLI versions use a flag-style login command instead of the
 subcommand form. If `codex login` is rejected on your installed version, check
 `codex --help` and use the login form shown there.
 
-## If you use Claude
+## Log into Claude
 
-If `claude` is missing and you already have Node.js 18+ and npm, install
-Claude Code CLI with:
-
-```bash
-npm install -g @anthropic-ai/claude-code
-```
-
-Alternative installation methods are documented in the official Claude Code CLI guide: https://code.claude.com/docs/en/quickstart
-
-Once installed, open a Terminal in your `scix` workspace and run:
+Once `claude` is installed, open a Terminal in your `scix` workspace and run:
 
 ```bash
 claude auth login
@@ -289,7 +300,9 @@ scix dev
 `scix dev` is the contributor bootstrap for a cloned source repo. It
 keeps the existing source files in place, creates any missing workspace files,
 optionally clones missing reference repos, and regenerates the generated Codex
-and Claude files. It does not create `xenv/` or install packages for you.
+and Claude files. It does not create `xenv/` or install Python packages for
+you, but it does try to install missing `nvm`, user-local Node.js/npm, Codex
+CLI, and Claude Code automatically.
 
 Before you change shared agent behavior, read
 [`docs/AI_FOLDER_GUIDE.md`](docs/AI_FOLDER_GUIDE.md). That guide explains what
