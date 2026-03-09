@@ -151,6 +151,21 @@ def test_root_ai_tree_matches_packaged_template_ai() -> None:
     assert (template_ai / "generated/repos/.gitkeep").exists()
 
 
+def test_root_readme_and_scix_image_match_packaged_template() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    source_readme = repo_root / "README.md"
+    template_readme = repo_root / "src/scix/assets/template_root/README.md"
+    source_image = repo_root / "docs/img/scix_image.png"
+    template_image = repo_root / "src/scix/assets/template_root/docs/img/scix_image.png"
+
+    assert source_readme.read_text(encoding="utf-8") == template_readme.read_text(encoding="utf-8")
+    assert '<img src="docs/img/scix_image.png"' in source_readme.read_text(encoding="utf-8")
+    assert "| `scix up` |" in source_readme.read_text(encoding="utf-8")
+    assert source_image.exists()
+    assert template_image.exists()
+    assert source_image.read_bytes() == template_image.read_bytes()
+
+
 def test_sync_workspace_updates_packaged_template_ai_in_source_checkout(tmp_path: Path) -> None:
     copy_template_root(tmp_path)
     copy_template_paths(tmp_path / "src/scix/assets/template_root", ["ai"])
