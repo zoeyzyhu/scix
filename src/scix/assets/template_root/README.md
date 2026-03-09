@@ -77,7 +77,7 @@ cd my-scix-work
 python3 -m venv xenv
 source xenv/bin/activate
 pip install --upgrade pip
-pip install scix paddle
+pip install scix
 scix up
 ```
 
@@ -155,6 +155,7 @@ Alternative auth flows:
 ```bash
 codex login --device-auth
 printenv OPENAI_API_KEY | codex login --with-api-key
+codex login --device-auth
 ```
 
 If your installed Codex CLI uses a different login syntax, check:
