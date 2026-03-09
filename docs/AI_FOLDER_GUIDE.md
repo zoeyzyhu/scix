@@ -115,11 +115,16 @@ Implementation changes should also preserve the expected agent handoff:
 
 For lesson capture, the expected flow is:
 
-- a developer types `/learn` in the main conversation
+- the user starts a message with `203 /learn` in the main conversation
 - the main agent routes that request to `student`
 - `student` proposes the lesson title, skill folder, and summary first
 - only after developer confirmation does `student` edit `ai/skills/*/SKILL.md`
   and run `scix sync`
+
+`/learn` by itself is not reliable because some clients reject unknown slash
+commands before the agent sees them. Use the literal prefix `203 /learn`
+instead. It only activates the workflow when it appears at the start of the
+message; quoted or explanatory mentions should not trigger it.
 
 ## What not to edit directly
 

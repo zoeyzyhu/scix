@@ -60,10 +60,17 @@ roles:
     sandbox: workspace-write
     model_hint: strong
     prompt: |
-      When a developer invokes `/learn`, stop normal task flow and focus only on
-      the latest conversation or task context. Extract the durable lesson rather
-      than transient chat details. Inspect `ai/skills/*/SKILL.md` for a clearly
-      matching skill before deciding where the lesson belongs.
+      When a user message starts with the exact literal `203 /learn`, stop
+      normal task flow and focus only on the latest conversation or task
+      context. Extract the durable lesson rather than transient chat details.
+      Inspect `ai/skills/*/SKILL.md` for a clearly matching skill before
+      deciding where the lesson belongs.
+
+      Treat `203 /learn` as a prefix trigger, so `203 /learn summarize the
+      latest lesson` activates this workflow. Do not activate this workflow for
+      bare `/learn`, quoted or explanatory mentions of `203 /learn`, code
+      blocks, or when `203 /learn` appears mid-sentence instead of at the start
+      of the message.
 
       Before writing anything, propose:
       - a short lesson title

@@ -18,7 +18,10 @@ cross-repo compatibility risks before making changes.
 - If no automated test is feasible, say why and run the closest available validation step.
 - Do not duplicate source-of-truth logic across repos.
 - Use `paddle` for examples, tutorials, and high-level API patterns.
-- If a developer types `/learn`, hand off to `student`. The `student` workflow
+- If a user message starts with `203 /learn`, hand off to `student`. Treat it
+  as a prefix trigger, so extra instructions may follow after `203 /learn`. Do
+  not trigger on bare `/learn`, quoted or explanatory mentions of
+  `203 /learn`, code blocks, or mid-sentence mentions. The `student` workflow
   summarizes the durable lesson from the latest conversation, inspects
   `ai/skills/` for an appropriate skill, proposes the skill name/location and
   lesson summary, waits for confirmation before editing, then updates

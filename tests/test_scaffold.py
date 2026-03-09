@@ -207,8 +207,8 @@ def test_sync_workspace_generates_expected_files(tmp_path: Path) -> None:
     assert "implementer -> tester -> reviewer" in (tmp_path / "AGENTS.md").read_text(
         encoding="utf-8"
     )
-    assert "/learn" in (tmp_path / "AGENTS.md").read_text(encoding="utf-8")
-    assert "/learn" in (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
+    assert "203 /learn" in (tmp_path / "AGENTS.md").read_text(encoding="utf-8")
+    assert "203 /learn" in (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
 
 
 def test_generated_student_role_requires_confirmation_before_skill_write(tmp_path: Path) -> None:
@@ -219,7 +219,9 @@ def test_generated_student_role_requires_confirmation_before_skill_write(tmp_pat
     claude_agent = (tmp_path / ".claude/agents/student.md").read_text(encoding="utf-8")
 
     for content in [codex_agent, claude_agent]:
-        assert "/learn" in content
+        assert "203 /learn" in content
+        assert "starts with the exact literal `203 /learn`" in content
+        assert "bare `/learn`" in content
         assert "Wait for explicit developer confirmation before editing files" in content
         assert "create or update `ai/skills/<skill-name>/SKILL.md`" in content
         assert "run `scix sync`" in content
