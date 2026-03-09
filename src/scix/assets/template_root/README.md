@@ -77,7 +77,7 @@ cd my-scix-work
 python3 -m venv xenv
 source xenv/bin/activate
 pip install --upgrade pip
-pip install scix
+pip install scix paddle
 scix up
 ```
 
@@ -86,9 +86,6 @@ If the short `scix` command is not on `PATH` in the current shell yet, run:
 ```bash
 python -m scix up
 ```
-
-Installing `scix` now pulls in `pydisort`, `pyharp`, `kintera`, `snapy`, and
-`paddle` automatically.
 
 For contributor setup, see the [Contributing](#contributing) section below.
 
@@ -119,8 +116,7 @@ source xenv/bin/activate
 
 ## Agent CLI Setup
 
-`scix up` and `scix dev` try to install missing `nvm`, user-local Node.js/npm,
-Codex CLI, and Claude Code automatically.
+`scix up` and `scix dev` try to install missing `nvm`, user-local Node.js/npm, Codex CLI, and Claude Code automatically.
 
 If that automatic step fails, run this fallback sequence exactly:
 
@@ -135,18 +131,18 @@ npm install -g @openai/codex
 npm install -g @anthropic-ai/claude-code
 ```
 
-If `codex` or `claude` is still unavailable, start a new shell or load `nvm`
-manually:
+If `codex` or `claude` is still unavailable, start a new shell or load your shell profile with:
 
 ```bash
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+source ~/.bashrc
+# or if you use zsh (Mac default):
+source ~/.zshrc
 ```
 
 Official references:
 
-- [Codex CLI](https://developers.openai.com/codex/cli/)
-- [Claude Code quickstart](https://code.claude.com/docs/en/quickstart)
+- [Codex CLI Setup](https://developers.openai.com/codex/cli/)
+- [Claude Code Quickstart](https://code.claude.com/docs/en/quickstart)
 
 ### Authenticate Codex
 
@@ -157,8 +153,8 @@ codex login
 Alternative auth flows:
 
 ```bash
-printenv OPENAI_API_KEY | codex login --with-api-key
 codex login --device-auth
+printenv OPENAI_API_KEY | codex login --with-api-key
 ```
 
 If your installed Codex CLI uses a different login syntax, check:
@@ -197,43 +193,16 @@ source xenv/bin/activate
 claude
 ```
 
-### VS Code Workflow
-
-If you prefer editor-integrated work, open the workspace folder in Visual Studio
-Code and use the built-in terminal:
-
-```bash
-source xenv/bin/activate
-codex
-```
-
-or:
-
-```bash
-source xenv/bin/activate
-claude
-```
-
-If the `code` shell command is not available yet, install it from the VS Code
-Command Palette with `Shell Command: Install 'code' command in PATH`.
-
-Optional editor extensions:
-
-- `Claude Code for VS Code` by Anthropic
-- `Codex - OpenAI's coding agent` by OpenAI
-
 ## Workspace Layout
 
-- `repos/`: cloned reference repositories such as `pydisort`, `kintera`,
-  `pyharp`, `snapy`, and `paddle`
+- `repos/`: cloned reference repositories such as `pydisort`, `kintera`, `pyharp`, `snapy`, and `paddle`
 - `workspace/`: your own analyses, experiments, prototypes, and notes
 - `xenv/`: your manually created local Python environment
 - `ai/`: the shared AI canon that generates Codex and Claude files
 
 ## Contributing
 
-If you are developing `scix` itself, clone the source repository instead of
-starting from `pip install scix`:
+If you are developing `scix` itself, clone the source repository instead of starting from `pip install scix`:
 
 ```bash
 git clone https://github.com/zoeyzyhu/scix.git
@@ -245,29 +214,20 @@ pip install -e .[dev]
 scix dev
 ```
 
-The editable install also pulls in the core planetary-science stack, so
-contributors do not need a separate manual install step for those packages.
+`scix dev` bootstraps a contributor checkout in place. It keeps the existing source tree, creates any missing workspace files, optionally clones missing reference repositories, regenerates generated Codex and Claude files, and tries to install missing agent CLIs if needed.
 
-`scix dev` bootstraps a contributor checkout in place. It keeps the existing
-source tree, creates any missing workspace files, optionally clones missing
-reference repositories, regenerates generated Codex and Claude files, and tries
-to install missing agent CLIs if needed.
-
-Before changing shared agent behavior, read
-[`docs/AI_FOLDER_GUIDE.md`](docs/AI_FOLDER_GUIDE.md). That guide explains what
-the repo-root `ai/` folder controls, how it maps to generated agent files, and
-which files are safe to edit.
+Before changing shared agent behavior, read [`docs/AI_FOLDER_GUIDE.md`](docs/AI_FOLDER_GUIDE.md). That guide explains whatthe repo-root `ai/` folder controls, how it maps to generated agent files, and which files are safe to edit.
 
 Install contributor hooks with:
 
 ```bash
-xenv/bin/pre-commit install
+pre-commit install
 ```
 
 Run the main contributor checks with:
 
 ```bash
-xenv/bin/pre-commit run --all-files
+pre-commit run --all-files
 pytest
 python -m build
 scix sync --check
@@ -275,11 +235,8 @@ scix sync --check
 
 When you change the AI canon:
 
-- edit the repo-root `ai/` files, not generated files under `.codex/`,
-  `.claude/`, `.agents/`, or repo overlays
-- run `scix sync` after each logical change so generated files and the packaged
-  template stay aligned
+- edit the repo-root `ai/` files, not generated files under `.codex/`, `.claude/`, `.agents/`, or repo overlays
+- run `scix sync` after each logical change so generated files and the packaged template stay aligned
 - inspect both the generated agent diff and the template diff before you commit
-- keep hooks portable and auditable, and never place secrets in prompts or
-  scripts
+- keep hooks portable and auditable, and never place secrets in prompts or scripts
 - follow the `implementer -> tester -> reviewer` workflow
