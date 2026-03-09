@@ -184,12 +184,32 @@ def test_sync_workspace_generates_expected_files(tmp_path: Path) -> None:
     )
     assert (tmp_path / ".claude/agents/explorer.md").exists()
     assert (tmp_path / ".codex/agents/explorer.toml").exists()
+    assert (tmp_path / ".claude/agents/student.md").exists()
+    assert (tmp_path / ".codex/agents/student.toml").exists()
     assert (tmp_path / ".claude/agents/tester.md").exists()
     assert (tmp_path / ".codex/agents/tester.toml").exists()
     assert (tmp_path / "ai/generated/repos/kintera/AGENTS.md").exists()
     assert "implementer -> tester -> reviewer" in (tmp_path / "AGENTS.md").read_text(
         encoding="utf-8"
     )
+    assert "/learn" in (tmp_path / "AGENTS.md").read_text(encoding="utf-8")
+    assert "/learn" in (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
+
+
+def test_generated_student_role_requires_confirmation_before_skill_write(tmp_path: Path) -> None:
+    copy_template_root(tmp_path)
+    sync_workspace(tmp_path)
+
+    codex_agent = (tmp_path / ".codex/agents/student.toml").read_text(encoding="utf-8")
+    claude_agent = (tmp_path / ".claude/agents/student.md").read_text(encoding="utf-8")
+
+    for content in [codex_agent, claude_agent]:
+        assert "/learn" in content
+        assert "Wait for explicit developer confirmation before editing files" in content
+        assert "create or update `ai/skills/<skill-name>/SKILL.md`" in content
+        assert "run `scix sync`" in content
+        assert "valid YAML frontmatter" in content
+        assert "lowercase hyphen-case" in content
 
 
 def test_sync_workspace_copies_repo_overlays_into_existing_clone(tmp_path: Path) -> None:

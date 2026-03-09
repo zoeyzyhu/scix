@@ -37,7 +37,8 @@ The main layers are:
   - Canonical role definitions.
   - These generate `.codex/agents/*.toml` and `.claude/agents/*.md`.
   - This includes the `implementer`, `tester`, and `reviewer` collaboration flow
-    for implementation work.
+    for implementation work, plus specialized roles such as `student` for
+    lesson capture.
 - `ai/skills/*/SKILL.md`
   - Reusable local instructions for focused workflows.
   - These are mirrored into `.agents/skills/` and `.claude/skills/`.
@@ -111,6 +112,14 @@ Implementation changes should also preserve the expected agent handoff:
 - `implementer` makes the change
 - `tester` adds or updates tests when feasible and runs the relevant command
 - `reviewer` checks correctness, regression risk, and whether testing evidence is present
+
+For lesson capture, the expected flow is:
+
+- a developer types `/learn` in the main conversation
+- the main agent routes that request to `student`
+- `student` proposes the lesson title, skill folder, and summary first
+- only after developer confirmation does `student` edit `ai/skills/*/SKILL.md`
+  and run `scix sync`
 
 ## What not to edit directly
 
