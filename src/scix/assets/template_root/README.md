@@ -31,9 +31,9 @@
 
 <p align="center">
   <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
-  <a href="#who-this-is-for">Who This Is For</a> &nbsp;&bull;&nbsp;
+  <a href="#agent-cli-setup">Agent CLI Setup</a> &nbsp;&bull;&nbsp;
   <a href="#quick-start">Quick Start</a> &nbsp;&bull;&nbsp;
-  <a href="#workflow-options">Workflow Options</a> &nbsp;&bull;&nbsp;
+  <a href="#workflow">Workflow</a> &nbsp;&bull;&nbsp;
   <a href="#contributing">Contributing</a>
 </p>
 
@@ -155,7 +155,6 @@ Alternative auth flows:
 ```bash
 codex login --device-auth
 printenv OPENAI_API_KEY | codex login --with-api-key
-codex login --device-auth
 ```
 
 If your installed Codex CLI uses a different login syntax, check:
@@ -176,7 +175,7 @@ If you use a token-based flow:
 claude setup-token
 ```
 
-## Workflow Options
+## Workflow
 
 ### Terminal Workflow
 
@@ -194,7 +193,7 @@ source xenv/bin/activate
 claude
 ```
 
-## Workspace Layout
+### Workspace Layout
 
 - `repos/`: cloned reference repositories such as `pydisort`, `kintera`, `pyharp`, `snapy`, and `paddle`
 - `workspace/`: your own analyses, experiments, prototypes, and notes
