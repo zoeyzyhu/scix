@@ -124,11 +124,10 @@ def cmd_install_repos(args: argparse.Namespace) -> int:
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
-    issues = doctor(find_workspace_root())
-    if issues:
-        print("scix doctor found issues:")
-        for issue in issues:
-            print(f"- {issue}")
+    report = doctor(find_workspace_root())
+    if report:
+        for line in report:
+            print(line)
         return 1
     print("scix doctor passed")
     return 0

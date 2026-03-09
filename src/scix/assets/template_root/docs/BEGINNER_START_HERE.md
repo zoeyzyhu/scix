@@ -6,7 +6,8 @@ It explains:
 
 - how to create or activate `xenv`
 - how to activate `xenv`
-- how to install Codex on Ubuntu or Debian
+- how `scix up` or `scix dev` install `nvm`, Node.js/npm, Codex, and Claude
+  when they are missing
 - how to log into Codex and Claude
 - what `repos/`, `workspace/`, and `ai/` are
 - how to use `scix sync`
