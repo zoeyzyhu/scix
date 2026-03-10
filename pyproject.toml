@@ -52,9 +52,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptools.dynamic]
-version = { attr = "scix.__version__" }
-
 [tool.setuptools.package-data]
 scix = ["assets/**/*", "assets/**/.*", "assets/.ai-root"]
 
@@ -72,10 +69,6 @@ target-version = "py39"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
-[tool.ruff.lint.per-file-ignores]
-"src/scix/__version__.py" = ["UP006", "UP035"]
-
 [tool.setuptools_scm]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
-write_to = "src/scix/__version__.py"
