@@ -21,7 +21,7 @@
   </a>
   <a href="https://github.com/zoeyzyhu/scix/blob/main/pyproject.toml">
     <img alt="macOS and Linux"
-      src="https://img.shields.io/badge/OS-macOS%20%7C%20Linux-F28C28?style=flat-square">
+        src="https://img.shields.io/badge/OS-macOS%20%7C%20Linux-F28C28?style=flat-square&logo=linux&logoColor=white&logoWidth=20&labelColor=555555">
   </a>
   <a href="https://www.python.org">
     <img alt="Python >=3.9"
