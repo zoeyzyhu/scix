@@ -23,6 +23,10 @@
     <img alt="macOS and Linux"
       src="https://img.shields.io/badge/OS-macOS%20%7C%20Linux-F28C28?style=flat-square">
   </a>
+  <a href="https://www.python.org">
+    <img alt="Python >=3.9"
+        src="https://img.shields.io/badge/python-%3E%3D3.9-blue?style=flat-square&logo=python&logoColor=white">
+  </a>
 </p>
 
 <p align="center">
@@ -62,10 +66,6 @@ You can also turn `/workspace` or any folder in `repos/` into a git managed dire
 - just `cd` into the folder and run `git init`
 - `scix` will ignore these directories in its own git version control so it does not interfere with `scix`'s workspace management
 
-## Requirements
-
-- macOS or Linux
-- Python `>= 3.9`
 
 ## Quick Start
 

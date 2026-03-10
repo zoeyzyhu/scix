@@ -252,24 +252,6 @@ def up_guidance(root: Path | None = None) -> list[str]:
     notes.append(rule)
     notes.append("")
 
-    # Step 1: Environment setup
-    notes += step(
-        "1. Prepare Python environment",
-        "Create and activate `xenv/` yourself before installing packages.",
-        ["python3 -m venv xenv", "source xenv/bin/activate"],
-    )
-
-    # Step 2: Install core packages
-    notes += step(
-        "2. Install core packages",
-        "Recommended environment setup:",
-        [
-            "pip install --upgrade pip",
-            "pip install scix",
-            "pip install pydisort pyharp kintera snapy paddle",
-        ],
-    )
-
     # Warnings for missing commands
     if shutil.which(APP_NAME) is None:
         notes.append(f"{YELLOW}!{RESET} {BOLD}`scix` command not found{RESET}")
