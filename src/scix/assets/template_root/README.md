@@ -1,5 +1,5 @@
 <h4 align="center">
-  <img src="https://raw.githubusercontent.com/zoeyzyhu/scix/main/docs/img/scix_image.png" alt="SciX" width="240" style="display: block; margin: 0 auto">
+  <img src="https://raw.githubusercontent.com/zoeyzyhu/scix/main/docs/img/scix_image.png" alt="SciX" width="360" style="display: block; margin: 0 auto">
 </h4>
 
 <p align="center">
