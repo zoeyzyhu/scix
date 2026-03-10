@@ -1,5 +1,5 @@
 <h4 align="center">
-  <img src="docs/img/scix_image.png" alt="SciX" width="480" style="display: block; margin: 0 auto">
+  <img src="https://raw.githubusercontent.com/zoeyzyhu/scix/main/docs/img/scix_image.png" alt="SciX" width="240" style="display: block; margin: 0 auto">
 </h4>
 
 <p align="center">
@@ -155,7 +155,6 @@ Alternative auth flows:
 ```bash
 codex login --device-auth
 printenv OPENAI_API_KEY | codex login --with-api-key
-codex login --device-auth
 ```
 
 If your installed Codex CLI uses a different login syntax, check:

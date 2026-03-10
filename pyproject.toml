@@ -76,6 +76,6 @@ select = ["E", "F", "I", "B", "UP"]
 "src/scix/__version__.py" = ["UP006", "UP035"]
 
 [tool.setuptools_scm]
-version_scheme = "post-release"
+version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 write_to = "src/scix/__version__.py"
