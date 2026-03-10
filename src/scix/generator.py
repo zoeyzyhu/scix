@@ -13,7 +13,13 @@ from .exceptions import CheckFailedError, ScixError
 
 AUTO_GEN_HEADER = "<!-- AUTO-GENERATED FILE. EDIT ai/policy/* OR ai/agents/roles.yaml INSTEAD. -->"
 EDITABLE_AI_DIRS = ("agents", "hooks", "policy", "skills")
+PACKAGED_TEMPLATE_ROOT = Path("src/scix/assets/template_root")
 PACKAGED_TEMPLATE_AI = Path("src/scix/assets/template_root/ai")
+PACKAGED_WORKSPACE_DOC_PATHS = (
+    Path("README.md"),
+    Path("docs/AI_FOLDER_GUIDE.md"),
+    Path("docs/img/scix_image.png"),
+)
 PACKAGED_GENERATED_PLACEHOLDER = Path("generated/repos/.gitkeep")
 
 
@@ -50,6 +56,7 @@ def sync_workspace(root: Path | None = None, check: bool = False) -> list[Path]:
 
     changed: list[Path] = []
     _sync_packaged_template_ai(root, changed, check)
+    _sync_packaged_template_docs(root, changed, check)
 
     repo_map = load_yaml(root / "ai/policy/repos.yaml")
     roles = load_yaml(root / "ai/agents/roles.yaml").get("roles", {})
@@ -147,6 +154,28 @@ def _sync_packaged_template_ai(root: Path, changed: list[Path], check: bool) -> 
             continue
         _remove_or_check(extra_path, changed, check)
     _prune_empty_dirs(generated_dir)
+
+
+def _sync_packaged_template_docs(root: Path, changed: list[Path], check: bool) -> None:
+    template_root = root / PACKAGED_TEMPLATE_ROOT
+    if not template_root.exists():
+        return
+
+    expected_files: set[Path] = set()
+    for relative_path in PACKAGED_WORKSPACE_DOC_PATHS:
+        source_path = root / relative_path
+        if not source_path.exists():
+            raise ScixError(f"Missing packaged workspace doc source: {source_path}")
+        target_path = template_root / relative_path
+        _write_bytes_or_check(target_path, source_path.read_bytes(), changed, check)
+        expected_files.add(target_path)
+
+    docs_root = template_root / "docs"
+    if docs_root.exists():
+        for extra_path in sorted(path for path in docs_root.rglob("*") if path.is_file()):
+            if extra_path not in expected_files:
+                _remove_or_check(extra_path, changed, check)
+        _prune_empty_dirs(docs_root)
 
 
 def _sync_text_tree(source_dir: Path, target_dir: Path, changed: list[Path], check: bool) -> None:
@@ -342,6 +371,19 @@ def _write_or_check(path: Path, content: str, changed: list[Path], check: bool) 
         raise CheckFailedError(f"Generated file is stale or missing: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+    if path.suffix == ".sh":
+        path.chmod(0o755)
+    changed.append(path)
+
+
+def _write_bytes_or_check(path: Path, content: bytes, changed: list[Path], check: bool) -> None:
+    current = path.read_bytes() if path.exists() else None
+    if current == content:
+        return
+    if check:
+        raise CheckFailedError(f"Generated file is stale or missing: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
     if path.suffix == ".sh":
         path.chmod(0o755)
     changed.append(path)
