@@ -159,7 +159,10 @@ def test_root_readme_and_scix_image_match_packaged_template() -> None:
     template_image = repo_root / "src/scix/assets/template_root/docs/img/scix_image.png"
 
     assert source_readme.read_text(encoding="utf-8") == template_readme.read_text(encoding="utf-8")
-    assert '<img src="docs/img/scix_image.png"' in source_readme.read_text(encoding="utf-8")
+    assert (
+        '<img src="https://raw.githubusercontent.com/zoeyzyhu/scix/main/docs/img/scix_image.png"'
+        in source_readme.read_text(encoding="utf-8")
+    )  # noqa: E501
     assert "| `scix up` |" in source_readme.read_text(encoding="utf-8")
     assert source_image.exists()
     assert template_image.exists()
