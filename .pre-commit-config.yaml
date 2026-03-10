@@ -3,6 +3,10 @@ repos:
     rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b
     hooks:
       - id: check-added-large-files
+        exclude: |
+          (?x)^(
+            docs/img/scix_image.png
+          )$
       - id: check-merge-conflict
       - id: check-json
       - id: check-toml
