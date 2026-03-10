@@ -155,7 +155,6 @@ Alternative auth flows:
 ```bash
 codex login --device-auth
 printenv OPENAI_API_KEY | codex login --with-api-key
-codex login --device-auth
 ```
 
 If your installed Codex CLI uses a different login syntax, check:
