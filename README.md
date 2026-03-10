@@ -1,5 +1,5 @@
 <h4 align="center">
-  <img src="docs/img/scix_image_v1.png" alt="SciX" width="480" style="display: block; margin: 0 auto">
+  <img src="docs/img/scix_image.png" alt="SciX" width="480" style="display: block; margin: 0 auto">
 </h4>
 
 <p align="center">

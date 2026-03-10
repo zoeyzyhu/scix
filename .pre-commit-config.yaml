@@ -5,7 +5,7 @@ repos:
       - id: check-added-large-files
         exclude: |
           (?x)^(
-            docs/img/scix_image_v1.png
+            docs/img/scix_image.png
           )$
       - id: check-merge-conflict
       - id: check-json
