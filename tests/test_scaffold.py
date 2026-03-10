@@ -172,9 +172,27 @@ def test_root_curated_docs_match_packaged_template() -> None:
         '<img src="https://raw.githubusercontent.com/zoeyzyhu/scix/main/docs/img/scix_image.png"'
         in source_readme
     )  # noqa: E501
-    assert "| `scix up` |" in source_readme
+    assert "pip install scix paddle" in source_readme
     assert "docs/AI_FOLDER_GUIDE.md" in source_readme
     assert not (template_root / "docs/img/scix_image_1.png").exists()
+
+
+def test_scix_cheat_command_prints_curated_command_guide(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from scix.cli import main
+
+    result = main(["cheat"])
+
+    assert result == 0
+    output = capsys.readouterr().out
+    assert "Start a new research workspace" in output
+    assert "mkdir my-scix-work" in output
+    assert "Contributor workflow" in output
+    assert "pre-commit run --all-files" in output
+    assert "Authenticate Codex" in output
+    assert "┌" in output
+    assert "└" in output
 
 
 def test_sync_workspace_updates_packaged_template_ai_in_source_checkout(tmp_path: Path) -> None:

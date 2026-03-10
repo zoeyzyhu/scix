@@ -100,12 +100,13 @@ The commands you will use most often are:
 
 | Command | Use it when |
 | --- | --- |
-| `scix --help` | You want to see the list of available commands and options. |
 | `scix up` | You are creating or refreshing a research workspace in the current directory. |
 | `scix doctor` | You want a quick health check on the current workspace. |
-| `scix sync` | You changed the AI canon and need to regenerate Codex/Claude outputs. |
+| `scix cheat` | You want to see a quick reference of the most common commands and their use cases. |
 | `scix install-repos` | One or more reference repositories are missing and need to be cloned again. |
 | `scix dev` | You are working on the `scix` source repository itself. |
+| `scix sync` | You changed the AI canon or README and need to regenerate Codex/Claude outputs. |
+| `scix --help` | You want to see the list of available commands and options. |
 
 Whenever you return to the workspace, reactivate the local environment:
 

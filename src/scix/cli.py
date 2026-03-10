@@ -13,6 +13,7 @@ from .bootstrap import (
     perform_up,
     up_guidance,
 )
+from .cheatsheet import render_cheat_sheet_text
 from .exceptions import CheckFailedError, ScixError
 from .generator import find_workspace_root, sync_workspace
 
@@ -66,6 +67,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sync_parser.set_defaults(func=cmd_sync)
 
+    cheat_parser = subparsers.add_parser(
+        "cheat",
+        help="Show curated workflow command sets for this repo",
+    )
+    cheat_parser.set_defaults(func=cmd_cheat)
+
     repo_parser = subparsers.add_parser(
         "install-repos",
         help="Clone missing reference repositories",
@@ -114,6 +121,12 @@ def cmd_sync(args: argparse.Namespace) -> int:
         print("scix sync --check passed")
     else:
         print(f"scix sync updated {len(changed)} paths")
+    return 0
+
+
+def cmd_cheat(args: argparse.Namespace) -> int:
+    del args
+    print(render_cheat_sheet_text(), end="")
     return 0
 
 
