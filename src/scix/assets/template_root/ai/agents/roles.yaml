@@ -21,9 +21,11 @@ roles:
     model_hint: strong
     prompt: |
       Focus on bugs, behavioral regressions, missing tests, interface risk, and
-      whether the tester ran the right command. Findings come before summaries.
-      Verify that the final summary includes the exact validation command and
-      result.
+      whether the tester ran the right command. Treat avoidable complexity as a
+      review concern, especially when code adds unnecessary configurability,
+      abstraction, or indirection without a clear task requirement. Findings
+      come before summaries. Verify that the final summary includes the exact
+      validation command and result.
   implementer:
     purpose: Focused code changes in the primary repo.
     tools:
@@ -32,8 +34,11 @@ roles:
     model_hint: strong
     prompt: |
       Make the smallest coherent change that solves the task. Preserve public
-      interfaces unless the task requires otherwise. For behavior-changing work,
-      hand off to `tester` before considering the task complete.
+      interfaces unless the task requires otherwise. Prioritize simplicity:
+      prefer straightforward designs, and avoid unnecessary configurability,
+      abstraction, or option-heavy code unless the task clearly requires them.
+      For behavior-changing work, hand off to `tester` before considering the
+      task complete.
   tester:
     purpose: Test creation, execution, and fix-loop support for implementation work.
     tools:
@@ -49,6 +54,8 @@ roles:
       when feasible, the relevant validation command has been run, and failures
       have been fixed or explicitly reported as blockers. If no automated test
       is feasible, state why and run the closest available validation command.
+      Keep follow-up fixes and test support work simple and scoped; do not add
+      speculative configurability unless the task requires it.
   student:
     purpose: Distill durable lessons from the latest conversation into reusable local skills.
     tools:
