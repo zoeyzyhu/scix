@@ -16,6 +16,11 @@ class WorkflowSet:
 
 WORKFLOW_SETS: tuple[WorkflowSet, ...] = (
     WorkflowSet(
+        title="scix CLI help",
+        note="Use this command to see available scix commands and options.",
+        commands=("scix --help",),
+    ),
+    WorkflowSet(
         title="Start a new research workspace",
         note="Use this in a fresh working directory when you want a new scix workspace.",
         commands=(
