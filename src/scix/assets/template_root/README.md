@@ -34,7 +34,6 @@
 </p>
 
 <p align="center">
-  <a href="#introduction">Introduction</a> &nbsp;&bull;&nbsp;
   <a href="#quick-start">Quick Start</a> &nbsp;&bull;&nbsp;
   <a href="#agent-cli-setup">Agent CLI Setup</a> &nbsp;&bull;&nbsp;
   <a href="#workflow">Workflow</a> &nbsp;&bull;&nbsp;
