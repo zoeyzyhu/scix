@@ -5,11 +5,6 @@ xarray
 netCDF4
 h5py
 pytest
-PyYAML
 pre-commit
-pydisort
-pyharp
-kintera
-snapy
 paddle
 scix
