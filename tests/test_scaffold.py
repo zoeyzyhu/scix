@@ -156,6 +156,7 @@ def test_root_curated_docs_match_packaged_template() -> None:
     template_root = repo_root / "src/scix/assets/template_root"
     mirrored_paths = [
         Path("README.md"),
+        Path("requirements.txt"),
         Path("docs/AI_FOLDER_GUIDE.md"),
         Path("docs/img/scix_image.png"),
     ]
@@ -172,7 +173,7 @@ def test_root_curated_docs_match_packaged_template() -> None:
         '<img src="https://raw.githubusercontent.com/zoeyzyhu/scix/main/docs/img/scix_image.png"'
         in source_readme
     )  # noqa: E501
-    assert "pip install scix paddle" in source_readme
+    assert "pip install -r requirements.txt" in source_readme
     assert "docs/AI_FOLDER_GUIDE.md" in source_readme
     assert not (template_root / "docs/img/scix_image_1.png").exists()
 
@@ -213,11 +214,17 @@ def test_sync_workspace_updates_packaged_template_ai_in_source_checkout(tmp_path
 
 def test_sync_workspace_updates_packaged_template_docs_in_source_checkout(tmp_path: Path) -> None:
     copy_template_root(tmp_path)
-    copy_template_paths(tmp_path / "src/scix/assets/template_root", ["README.md", "docs"])
+    copy_template_paths(
+        tmp_path / "src/scix/assets/template_root",
+        ["README.md", "requirements.txt", "docs"],
+    )
     source_readme = tmp_path / "README.md"
     template_readme = tmp_path / "src/scix/assets/template_root/README.md"
+    source_requirements = tmp_path / "requirements.txt"
+    template_requirements = tmp_path / "src/scix/assets/template_root/requirements.txt"
     extra_template_doc = tmp_path / "src/scix/assets/template_root/docs/img/scix_image_1.png"
     source_readme.write_text("updated root readme\n", encoding="utf-8")
+    source_requirements.write_text("updated requirements\n", encoding="utf-8")
     extra_template_doc.parent.mkdir(parents=True, exist_ok=True)
     extra_template_doc.write_bytes(b"stale")
 
@@ -227,7 +234,9 @@ def test_sync_workspace_updates_packaged_template_docs_in_source_checkout(tmp_pa
     changed = sync_workspace(tmp_path)
 
     assert template_readme.read_text(encoding="utf-8") == "updated root readme\n"
+    assert template_requirements.read_text(encoding="utf-8") == "updated requirements\n"
     assert template_readme in changed
+    assert template_requirements in changed
     assert extra_template_doc in changed
     assert not extra_template_doc.exists()
 

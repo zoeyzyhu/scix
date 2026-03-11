@@ -1,0 +1,10 @@
+numpy
+scipy
+matplotlib
+xarray
+netCDF4
+h5py
+pytest
+pre-commit
+paddle
+scix

@@ -76,7 +76,7 @@ cd my-scix-work
 python3 -m venv xenv
 source xenv/bin/activate
 pip install --upgrade pip
-pip install scix paddle
+pip install -r requirements.txt
 scix up
 ```
 

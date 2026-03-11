@@ -17,6 +17,7 @@ PACKAGED_TEMPLATE_ROOT = Path("src/scix/assets/template_root")
 PACKAGED_TEMPLATE_AI = Path("src/scix/assets/template_root/ai")
 PACKAGED_WORKSPACE_DOC_PATHS = (
     Path("README.md"),
+    Path("requirements.txt"),
     Path("docs/AI_FOLDER_GUIDE.md"),
     Path("docs/img/scix_image.png"),
 )
