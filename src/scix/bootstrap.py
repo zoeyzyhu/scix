@@ -327,7 +327,7 @@ def dev_up_guidance(root: Path | None = None) -> list[str]:
         "1. Install development dependencies",
         None,
         [
-            "pip install pydisort pyharp kintera snapy paddle",
+            "pip install -r requirements.txt",
         ],
     )
 

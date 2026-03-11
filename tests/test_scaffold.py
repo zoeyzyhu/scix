@@ -172,7 +172,7 @@ def test_root_curated_docs_match_packaged_template() -> None:
         '<img src="https://raw.githubusercontent.com/zoeyzyhu/scix/main/docs/img/scix_image.png"'
         in source_readme
     )  # noqa: E501
-    assert "pip install scix paddle" in source_readme
+    assert "pip install -r requirements.txt" in source_readme
     assert "docs/AI_FOLDER_GUIDE.md" in source_readme
     assert not (template_root / "docs/img/scix_image_1.png").exists()
 
