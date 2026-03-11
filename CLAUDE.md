@@ -65,5 +65,6 @@ cross-repo compatibility risks before making changes.
 - `disort`
 - `paddle-examples`
 - `repo-router`
+- `snapy-multi-block-output`
 - `thermodynamics`
 - `tutorial-style`
