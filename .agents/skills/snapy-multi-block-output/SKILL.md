@@ -36,6 +36,18 @@ same process and behavior differs from the one-block-per-process case.
 - Standalone `MeshBlock::initialize()` exchange logic is reused block-by-block
   under `Mesh`, causing deadlocks because local-copy orchestration is bypassed.
 
+## NCCL Multi-Block Note
+
+- For NCCL with multiple `MeshBlock`s per process, point-to-point tags are not
+  a reliable discriminator the way they are with Gloo.
+- For cubed-sphere multi-block-per-process runs, per-block `send/recv` launch
+  is insufficient even if local copies and topology are correct.
+- The durable fix pattern is:
+  route cubed-sphere exchange through the shared `Layout::launch_exchange()`
+  path, order remote ops by actual exchange-loop order rather than buffer id,
+  and for NCCL launch remote work process-wide across all local blocks so
+  `recv/send` posting order is identical on both processes.
+
 ## Guardrails
 
 - Prefer fixing shared `Mesh` orchestration and output code over adding
