@@ -22,6 +22,7 @@ PACKAGED_WORKSPACE_DOC_PATHS = (
     Path("docs/img/scix_image.png"),
 )
 PACKAGED_GENERATED_PLACEHOLDER = Path("generated/repos/.gitkeep")
+DEPRECATED_ROLE_KEYS = ("prompt", "model_hint", "tools")
 
 
 def find_workspace_root(start: Path | None = None) -> Path:
@@ -61,6 +62,7 @@ def sync_workspace(root: Path | None = None, check: bool = False) -> list[Path]:
 
     repo_map = load_yaml(root / "ai/policy/repos.yaml")
     roles = load_yaml(root / "ai/agents/roles.yaml").get("roles", {})
+    _validate_role_specs(roles)
     workspace_md = read_text(root / "ai/policy/workspace.md")
     rules_md = read_text(root / "ai/policy/rules.md")
     commands_md = read_text(root / "ai/policy/commands.md")
@@ -331,27 +333,44 @@ def render_claude_settings() -> str:
 
 def render_codex_agent(role_name: str, spec: dict) -> str:
     description = spec.get("purpose", "")
-    tools = spec.get("tools") or []
     sandbox = spec.get("sandbox", "workspace-write")
-    model_hint = spec.get("model_hint", "default")
-    prompt = spec.get("prompt", "")
-    tools_list = ", ".join(f'"{item}"' for item in tools)
+    model = spec.get("model")
+    developer_instructions = spec.get("developer_instructions", "")
+    model_line = f'model = "{model}"\n' if model else ""
     return (
+        f'name = "{role_name}"\n'
         f'description = "{description}"\n'
         f'sandbox_mode = "{sandbox}"\n'
-        f'model_hint = "{model_hint}"\n'
-        f"tools = [{tools_list}]\n"
-        'prompt = """\n'
-        f"{prompt}\n"
+        f"{model_line}"
+        'developer_instructions = """\n'
+        f"{developer_instructions}\n"
         '"""\n'
     )
 
 
 def render_claude_agent(role_name: str, spec: dict) -> str:
-    tools = ", ".join(spec.get("tools") or [])
+    tools = ", ".join(spec.get("claude_tools") or [])
     description = spec.get("purpose", "")
-    prompt = (spec.get("prompt") or "").strip()
-    return f"---\nname: {role_name}\ndescription: {description}\ntools: {tools}\n---\n\n{prompt}\n"
+    developer_instructions = (spec.get("developer_instructions") or "").strip()
+    return (
+        f"---\nname: {role_name}\ndescription: {description}\ntools: {tools}\n---\n\n"
+        f"{developer_instructions}\n"
+    )
+
+
+def _validate_role_specs(roles: dict) -> None:
+    if not isinstance(roles, dict):
+        raise ScixError("Expected `roles` in ai/agents/roles.yaml to be a mapping.")
+    for role_name, spec in sorted(roles.items()):
+        if not isinstance(spec, dict):
+            raise ScixError(f"Role `{role_name}` in ai/agents/roles.yaml must be a mapping.")
+        deprecated = [key for key in DEPRECATED_ROLE_KEYS if key in spec]
+        if deprecated:
+            keys = ", ".join(deprecated)
+            raise ScixError(
+                f"Role `{role_name}` in ai/agents/roles.yaml uses deprecated key(s): {keys}. "
+                "Use `developer_instructions`, `claude_tools`, and optional `model`."
+            )
 
 
 def _prune_empty_dirs(root: Path) -> None:

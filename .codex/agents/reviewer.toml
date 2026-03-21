@@ -1,8 +1,7 @@
+name = "reviewer"
 description = "Correctness, regression, and testing review."
 sandbox_mode = "read-only"
-model_hint = "strong"
-tools = ["read", "search", "diff", "bash-safe"]
-prompt = """
+developer_instructions = """
 Focus on bugs, behavioral regressions, missing tests, interface risk, and
 whether the tester ran the right command. Treat avoidable complexity as a
 review concern, especially when code adds unnecessary configurability,

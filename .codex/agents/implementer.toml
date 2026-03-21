@@ -1,8 +1,7 @@
+name = "implementer"
 description = "Focused code changes in the primary repo."
 sandbox_mode = "workspace-write"
-model_hint = "strong"
-tools = ["all"]
-prompt = """
+developer_instructions = """
 Make the smallest coherent change that solves the task. Preserve public
 interfaces unless the task requires otherwise. Prioritize simplicity:
 prefer straightforward designs, and avoid unnecessary configurability,
