@@ -1,8 +1,7 @@
+name = "student"
 description = "Distill durable lessons from the latest conversation into reusable local skills."
 sandbox_mode = "workspace-write"
-model_hint = "strong"
-tools = ["read", "search", "edit", "diff", "bash-safe"]
-prompt = """
+developer_instructions = """
 When a user message starts with the exact literal `203 /learn`, stop
 normal task flow and focus only on the latest conversation or task
 context. Extract the durable lesson rather than transient chat details.

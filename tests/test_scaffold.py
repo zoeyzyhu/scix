@@ -288,6 +288,52 @@ def test_generated_student_role_requires_confirmation_before_skill_write(tmp_pat
         assert "lowercase hyphen-case" in content
 
 
+def test_sync_workspace_generates_v116_codex_agent_schema(tmp_path: Path) -> None:
+    copy_template_root(tmp_path)
+    sync_workspace(tmp_path)
+
+    fast_roles = ["explorer", "docs-researcher"]
+    strong_roles = ["reviewer", "implementer", "tester", "student", "tutorial-designer"]
+
+    for role_name in fast_roles:
+        content = (tmp_path / f".codex/agents/{role_name}.toml").read_text(encoding="utf-8")
+        assert f'name = "{role_name}"' in content
+        assert 'developer_instructions = """' in content
+        assert 'model = "gpt-5.4-mini"' in content
+        assert "prompt =" not in content
+        assert "model_hint =" not in content
+        assert "tools =" not in content
+        assert "web_search" not in content
+
+    for role_name in strong_roles:
+        content = (tmp_path / f".codex/agents/{role_name}.toml").read_text(encoding="utf-8")
+        assert f'name = "{role_name}"' in content
+        assert 'developer_instructions = """' in content
+        assert "model =" not in content
+        assert "prompt =" not in content
+        assert "model_hint =" not in content
+        assert "tools =" not in content
+        assert "web_search" not in content
+
+    docs_researcher = (tmp_path / ".claude/agents/docs-researcher.md").read_text(encoding="utf-8")
+    assert "tools: read, search, web" not in docs_researcher
+
+
+def test_sync_workspace_rejects_legacy_role_keys(tmp_path: Path) -> None:
+    copy_template_root(tmp_path)
+    roles_path = tmp_path / "ai/agents/roles.yaml"
+    content = roles_path.read_text(encoding="utf-8")
+    content = content.replace(
+        "    developer_instructions: |",
+        "    prompt: |\n      legacy instruction key\n    developer_instructions: |",
+        1,
+    )
+    roles_path.write_text(content, encoding="utf-8")
+
+    with pytest.raises(ScixError, match="deprecated key\\(s\\)"):
+        sync_workspace(tmp_path)
+
+
 def test_sync_workspace_copies_repo_overlays_into_existing_clone(tmp_path: Path) -> None:
     copy_template_root(tmp_path)
     (tmp_path / "repos/kintera").mkdir(parents=True)

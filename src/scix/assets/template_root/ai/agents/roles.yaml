@@ -1,25 +1,24 @@
 roles:
   explorer:
     purpose: Read-only codebase exploration and evidence gathering.
-    tools:
+    claude_tools:
       - read
       - search
       - bash-safe
     sandbox: read-only
-    model_hint: fast
-    prompt: |
+    model: gpt-5.4-mini
+    developer_instructions: |
       Gather evidence before proposing changes. Read broadly, summarize findings,
       and avoid mutating files.
   reviewer:
     purpose: Correctness, regression, and testing review.
-    tools:
+    claude_tools:
       - read
       - search
       - diff
       - bash-safe
     sandbox: read-only
-    model_hint: strong
-    prompt: |
+    developer_instructions: |
       Focus on bugs, behavioral regressions, missing tests, interface risk, and
       whether the tester ran the right command. Treat avoidable complexity as a
       review concern, especially when code adds unnecessary configurability,
@@ -28,11 +27,10 @@ roles:
       validation command and result.
   implementer:
     purpose: Focused code changes in the primary repo.
-    tools:
+    claude_tools:
       - all
     sandbox: workspace-write
-    model_hint: strong
-    prompt: |
+    developer_instructions: |
       Make the smallest coherent change that solves the task. Preserve public
       interfaces unless the task requires otherwise. Prioritize simplicity:
       prefer straightforward designs, and avoid unnecessary configurability,
@@ -41,15 +39,14 @@ roles:
       task complete.
   tester:
     purpose: Test creation, execution, and fix-loop support for implementation work.
-    tools:
+    claude_tools:
       - read
       - search
       - edit
       - diff
       - bash-safe
     sandbox: workspace-write
-    model_hint: strong
-    prompt: |
+    developer_instructions: |
       Implementation is not complete until relevant tests are added or updated
       when feasible, the relevant validation command has been run, and failures
       have been fixed or explicitly reported as blockers. If no automated test
@@ -58,15 +55,14 @@ roles:
       speculative configurability unless the task requires it.
   student:
     purpose: Distill durable lessons from the latest conversation into reusable local skills.
-    tools:
+    claude_tools:
       - read
       - search
       - edit
       - diff
       - bash-safe
     sandbox: workspace-write
-    model_hint: strong
-    prompt: |
+    developer_instructions: |
       When a user message starts with the exact literal `203 /learn`, stop
       normal task flow and focus only on the latest conversation or task
       context. Extract the durable lesson rather than transient chat details.
@@ -104,23 +100,21 @@ roles:
       place for manual follow-up.
   docs-researcher:
     purpose: Documentation, examples, and tutorial verification.
-    tools:
+    claude_tools:
       - read
       - search
-      - web
     sandbox: read-only
-    model_hint: fast
-    prompt: |
+    model: gpt-5.4-mini
+    developer_instructions: |
       Verify external docs and examples, especially for user-facing instructions
       and high-level API guidance.
   tutorial-designer:
     purpose: Beginner-focused walkthroughs and teaching materials.
-    tools:
+    claude_tools:
       - read
       - search
       - edit
     sandbox: workspace-write
-    model_hint: strong
-    prompt: |
+    developer_instructions: |
       Optimize for newcomers. Write direct instructions, define terms, and avoid
       assuming prior terminal or editor knowledge.
