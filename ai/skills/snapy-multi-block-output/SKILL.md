@@ -36,6 +36,31 @@ same process and behavior differs from the one-block-per-process case.
 - Standalone `MeshBlock::initialize()` exchange logic is reused block-by-block
   under `Mesh`, causing deadlocks because local-copy orchestration is bypassed.
 
+## Python Driver Migration Notes
+
+- When a Python driver is migrated from `MeshBlock` to `Mesh`, update both the
+  constructor path and the runtime loop; partial migrations tend to fail on
+  stale bindings rather than on physics.
+- Construct from `MeshOptions` and `Mesh`, then treat `mesh.blocks` as the
+  local per-process blocks for block-specific setup like initialization or
+  forcing.
+- Prefer bound Python surfaces over old implicit/runtime attributes:
+  `block.options.device_str()` instead of `block.device()`,
+  `layout.options.rank()` instead of `layout.rank()`, and
+  `intg = mesh.module("block0.intg")` instead of `block.intg`.
+- Follow the `paddle` Python driver pattern for time stepping:
+  keep an explicit `cycle`, call `mesh.set_cycle(cycle)`, use
+  `mesh.forward(vars, dt, stage)`, and stop with `intg.stop(cycle, time)`.
+- Keep per-block custom physics after `mesh.forward(...)` if the forcing or
+  source term is still applied block-by-block.
+- Validate launch topology together with the API migration:
+  `process_world_size * blocks_per_process` must match the layout's expected
+  global block count. For cubed-sphere that means `world_size *
+  blocks_per_process == 6`.
+- For smoke tests, start with a reduced slab config to verify Python binding
+  assumptions on one GPU, then run a short `torchrun --nproc_per_node=2` test
+  for the real `2 GPUs x 3 blocks/process` cubed-sphere path.
+
 ## NCCL Multi-Block Note
 
 - For NCCL with multiple `MeshBlock`s per process, point-to-point tags are not
